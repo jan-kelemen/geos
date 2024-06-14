@@ -12,7 +12,9 @@ option(GEOS_ENABLE_COMPILER_STATIC_ANALYSIS "Enable static analysis provided by 
 option(GEOS_ENABLE_CPPCHECK "Enable cppcheck in build" OFF)
 option(GEOS_ENABLE_IWYU "Enable include-what-you-use in build" OFF)
 
-find_package(Boost REQUIRED COMPONENT algorithm circular_buffer optional process)
+find_package(Boost REQUIRED)
+find_package(Bullet REQUIRED)
+find_package(EnTT REQUIRED)
 find_package(fmt REQUIRED)
 find_package(freetype REQUIRED)
 find_package(imgui REQUIRED)

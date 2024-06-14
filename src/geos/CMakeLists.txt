@@ -17,6 +17,8 @@ target_link_libraries(geos
         vkrndr
     PRIVATE
         boost::boost
+        Bullet::Bullet
+        EnTT::EnTT
         glm::glm
         SDL2::SDL2main
         spdlog::spdlog

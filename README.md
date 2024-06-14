@@ -19,7 +19,7 @@ cmake --build --preset=release
 Note: Override packages from Conan Center with updated ones from [jan-kelemen/conan-recipes](https://github.com/jan-kelemen/conan-recipes), this is mostly due to hardening or sanitizer options being incompatible with packages on Conan Center.
 ```
 git clone git@github.com:jan-kelemen/conan-recipes.git
-conan create conan-recipes/recipes/sdl/all --version 2.30.1
+conan create conan-recipes/recipes/sdl/all --version 2.30.3
 conan create conan-recipes/recipes/freetype/meson --version 2.13.2
 conan create conan-recipes/recipes/pulseaudio/meson --version 17.0 # Linux only
 ```
