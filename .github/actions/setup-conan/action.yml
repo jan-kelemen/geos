@@ -20,7 +20,7 @@ inputs:
   version:
     description: 'Version to install'
     required: false
-    default: 2.2.1
+    default: 2.4.1
 
 runs:
   using: 'composite'
