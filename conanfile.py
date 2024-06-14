@@ -12,12 +12,14 @@ class GeosConan(ConanFile):
 
     def requirements(self):
         self.requires("boost/1.85.0")
-        self.requires("glm/cci.20230113")
+        self.requires("bullet3/3.25")
+        self.requires("entt/3.13.0")
         self.requires("fmt/10.2.1")
         self.requires("freetype/2.13.2")
-        self.requires("imgui/1.90.4-docking")
-        self.requires("sdl/2.30.1")
-        self.requires("spdlog/1.13.0")
+        self.requires("glm/cci.20230113")
+        self.requires("imgui/1.90.8-docking")
+        self.requires("sdl/2.30.3")
+        self.requires("spdlog/1.14.1")
         self.requires("stb/cci.20230920")
         self.requires("tinygltf/2.8.19")
         self.requires("vulkan-headers/1.3.268.0")
@@ -25,7 +27,7 @@ class GeosConan(ConanFile):
 
     def build_requirements(self):
         self.tool_requires("cmake/[^3.27]")
-        self.test_requires("catch2/[^3.5.2]")
+        self.test_requires("catch2/[^3.6.0]")
 
     def layout(self):
         cmake_layout(self)
