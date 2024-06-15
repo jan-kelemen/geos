@@ -29,6 +29,7 @@
 #include <utility>
 
 // IWYU pragma: no_include <functional>
+// IWYU pragma: no_include <unordered_map>
 
 namespace
 {

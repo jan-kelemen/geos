@@ -1,3 +1,5 @@
+#include <scene.hpp>
+
 #include <sdl_window.hpp>
 #include <vulkan_context.hpp>
 #include <vulkan_device.hpp>
@@ -65,6 +67,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
             &swap_chain};
         renderer.set_imgui_layer(enable_validation_layers);
 
+        geos::scene scene;
+        scene.attach_renderer(&device, &renderer);
+
         bool done{false};
         while (!done)
         {
@@ -83,11 +88,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
             }
 
             renderer.begin_frame();
-
+            scene.begin_frame();
+            scene.update();
+            renderer.draw(&scene);
+            scene.end_frame();
             renderer.end_frame();
         }
 
         vkDeviceWaitIdle(device.logical);
+
+        scene.detach_renderer();
     }
 
     destroy(&device);

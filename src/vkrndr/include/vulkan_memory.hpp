@@ -17,6 +17,12 @@ namespace vkrndr
         uint32_t type_filter,
         VkMemoryPropertyFlags properties);
 
+    struct [[nodiscard]] memory_region final
+    {
+        VkDeviceSize offset{};
+        VkDeviceSize size{};
+    };
+
     struct [[nodiscard]] mapped_memory final
     {
         VkDeviceMemory device_memory;
@@ -44,8 +50,10 @@ namespace vkrndr
 
     mapped_memory map_memory(vulkan_device* device,
         VkDeviceMemory memory,
-        VkDeviceSize size,
-        VkDeviceSize offset = 0);
+        memory_region const& region);
+
+    mapped_memory
+    map_memory(vulkan_device* device, VkDeviceMemory memory, VkDeviceSize size);
 
     void unmap_memory(vulkan_device* device, mapped_memory* memory);
 } // namespace vkrndr

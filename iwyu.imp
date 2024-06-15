@@ -66,6 +66,7 @@
   { include: [ "<glm/detail/type_quat.inl>", private, "<glm/gtc/quaternion.hpp>", public ] },
   { include: [ "<glm/detail/type_quat.hpp>", private, "<glm/gtc/quaternion.hpp>", public ] },
   { include: [ "<glm/detail/func_geometric.inl>", private, "<glm/geometric.hpp>", public ] },
+  { include: [ "<glm/detail/func_trigonometric.inl>", private, "<glm/trigonometric.hpp>", public ] },
 
   # freetype aliases
   { "include": ["@<freetype/.*>", private, "<ft2build.h>", public] },

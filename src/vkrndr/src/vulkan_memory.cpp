@@ -27,13 +27,23 @@ uint32_t vkrndr::find_memory_type(VkPhysicalDevice const physical_device,
 
 vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* const device,
     VkDeviceMemory const memory,
-    VkDeviceSize const size,
-    VkDeviceSize const offset)
+    memory_region const& region)
 {
     void* mapped; // NOLINT
-    check_result(
-        vkMapMemory(device->logical, memory, offset, size, 0, &mapped));
+    check_result(vkMapMemory(device->logical,
+        memory,
+        region.offset,
+        region.size,
+        0,
+        &mapped));
     return {memory, mapped};
+}
+
+vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* const device,
+    VkDeviceMemory const memory,
+    VkDeviceSize const size)
+{
+    return map_memory(device, memory, memory_region{.offset = 0, .size = size});
 }
 
 void vkrndr::unmap_memory(vulkan_device* device, mapped_memory* memory)
