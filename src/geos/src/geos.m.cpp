@@ -51,7 +51,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     vkrndr::sdl_guard const sdl_guard{SDL_INIT_VIDEO};
 
     vkrndr::sdl_window window{"geos",
-        static_cast<SDL_WindowFlags>(
+        static_cast<SDL_WindowFlags>(SDL_WINDOW_MAXIMIZED |
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI),
         true,
         512,

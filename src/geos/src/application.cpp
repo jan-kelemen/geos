@@ -3,8 +3,8 @@
 #include <cppext_numeric.hpp>
 
 geos::application::application()
-    : camera_{glm::fvec3(3.0f, 3.0f, 3.0f),
-          glm::fvec3(0.0f, 0.0f, 0.0f),
+    : camera_{glm::fvec3{3.0f, 3.0f, 3.0f},
+          glm::fvec3{0.0f, 0.0f, 0.0f},
           45.0f,
           1.0f,
           0.1f,

@@ -75,8 +75,10 @@ vkrndr::vulkan_renderer::vulkan_renderer(vulkan_window* const window,
     , swap_chain_{std::make_unique<vulkan_swap_chain>(window_,
           context_,
           device_)}
-    , command_buffers_{vulkan_swap_chain::max_frames_in_flight}
-    , secondary_buffers_{vulkan_swap_chain::max_frames_in_flight}
+    , command_buffers_{vulkan_swap_chain::max_frames_in_flight,
+          vulkan_swap_chain::max_frames_in_flight}
+    , secondary_buffers_{vulkan_swap_chain::max_frames_in_flight,
+          vulkan_swap_chain::max_frames_in_flight}
     , descriptor_pool_{create_descriptor_pool(device)}
     , font_manager_{std::make_unique<font_manager>()}
     , gltf_manager_{std::make_unique<gltf_manager>(this)}
@@ -87,13 +89,13 @@ vkrndr::vulkan_renderer::vulkan_renderer(vulkan_window* const window,
         device->present_queue->command_pool,
         vulkan_swap_chain::max_frames_in_flight,
         VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        command_buffers_);
+        command_buffers_.as_span());
 
     create_command_buffers(device_,
         device->present_queue->command_pool,
         vulkan_swap_chain::max_frames_in_flight,
         VK_COMMAND_BUFFER_LEVEL_SECONDARY,
-        secondary_buffers_);
+        secondary_buffers_.as_span());
 }
 
 vkrndr::vulkan_renderer::~vulkan_renderer()
@@ -170,13 +172,12 @@ void vkrndr::vulkan_renderer::draw(vulkan_scene* scene)
     }
 
     uint32_t image_index{};
-    if (!swap_chain_->acquire_next_image(current_frame_, image_index))
+    if (!swap_chain_->acquire_next_image(command_buffers_.index(), image_index))
     {
         return;
     }
 
-    std::vector<VkCommandBuffer> submit_buffers{
-        command_buffers_[current_frame_]};
+    std::vector<VkCommandBuffer> submit_buffers{command_buffers_.top()};
 
     // NOLINTNEXTLINE(readability-qualified-auto)
     auto primary_buffer{submit_buffers[0]};
@@ -239,12 +240,8 @@ void vkrndr::vulkan_renderer::draw(vulkan_scene* scene)
 
     vkCmdBeginRendering(primary_buffer, &render_info);
 
-    record_command_buffer(inheritance_info,
-        scene,
-        secondary_buffers_[current_frame_]);
-    vkCmdExecuteCommands(primary_buffer,
-        1,
-        &secondary_buffers_[current_frame_]);
+    record_command_buffer(inheritance_info, scene, secondary_buffers_.top());
+    vkCmdExecuteCommands(primary_buffer, 1, &secondary_buffers_.top());
 
     vkCmdEndRendering(primary_buffer);
 
@@ -263,11 +260,11 @@ void vkrndr::vulkan_renderer::draw(vulkan_scene* scene)
     check_result(vkEndCommandBuffer(primary_buffer));
 
     swap_chain_->submit_command_buffers(submit_buffers,
-        current_frame_,
+        command_buffers_.index(),
         image_index);
 
-    current_frame_ =
-        (current_frame_ + 1) % vulkan_swap_chain::max_frames_in_flight;
+    command_buffers_.cycle();
+    secondary_buffers_.cycle();
 }
 
 vkrndr::vulkan_image vkrndr::vulkan_renderer::load_texture(

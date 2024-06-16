@@ -166,9 +166,10 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    frame_data_.resize(renderer->image_count());
-
-    for (auto const& [index, data] : std::views::enumerate(frame_data_))
+    frame_data_ = cppext::cyclic_stack<frame_data>{renderer->image_count(),
+        renderer->image_count()};
+    for (auto const& [index, data] :
+        std::views::enumerate(frame_data_.as_span()))
     {
         data.uniform_buffer_region_ = {
             .offset = cppext::narrow<VkDeviceSize>(index) * uniform_buffer_size,
@@ -192,7 +193,7 @@ void geos::scene::detach_renderer(vkrndr::vulkan_device* device,
 {
     if (device)
     {
-        for (auto& data : frame_data_)
+        for (auto& data : frame_data_.as_span())
         {
             vkFreeDescriptorSets(device->logical,
                 renderer->descriptor_pool(),
@@ -216,10 +217,7 @@ void geos::scene::detach_renderer(vkrndr::vulkan_device* device,
     vulkan_device_ = nullptr;
 }
 
-void geos::scene::begin_frame()
-{
-    current_frame_ = (current_frame_ + 1) % vulkan_renderer_->image_count();
-}
+void geos::scene::begin_frame() { frame_data_.cycle(); }
 
 void geos::scene::end_frame() { }
 
@@ -235,7 +233,7 @@ void geos::scene::update(camera const& camera)
 
         vkrndr::mapped_memory uniform_map{vkrndr::map_memory(vulkan_device_,
             vertex_uniform_buffer_.memory,
-            frame_data_[current_frame_].uniform_buffer_region_)};
+            frame_data_.top().uniform_buffer_region_)};
 
         *uniform_map.as<transform>() = {.model = glm::rotate(glm::mat4(1.0f),
                                             time * glm::radians(90.0f),
@@ -288,8 +286,8 @@ void geos::scene::draw(VkCommandBuffer command_buffer, VkExtent2D const extent)
         *pipeline_,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
         0,
-        std::span<VkDescriptorSet const>{
-            &frame_data_[current_frame_].descriptor_set_,
+
+        std::span<VkDescriptorSet const>{&frame_data_.top().descriptor_set_,
             1});
 
     vkCmdDrawIndexed(command_buffer, 36, 1, 0, 0, 0);

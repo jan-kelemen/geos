@@ -77,12 +77,12 @@ namespace vkrndr
         [[nodiscard]] constexpr VkImageView image_view(
             uint32_t image_index) const noexcept;
 
-        [[nodiscard]] bool acquire_next_image(uint32_t current_frame,
+        [[nodiscard]] bool acquire_next_image(size_t current_frame,
             uint32_t& image_index);
 
         void submit_command_buffers(
             std::span<VkCommandBuffer const> command_buffers,
-            uint32_t current_frame,
+            size_t current_frame,
             uint32_t image_index);
 
         void recreate();

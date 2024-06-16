@@ -57,7 +57,8 @@ vkrndr::imgui_render_layer::imgui_render_layer(
     : window_{window}
     , device_{device}
     , descriptor_pool_{create_descriptor_pool(device)}
-    , command_buffers_{vulkan_swap_chain::max_frames_in_flight}
+    , command_buffers_{vulkan_swap_chain::max_frames_in_flight,
+          vulkan_swap_chain::max_frames_in_flight}
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,7 +107,7 @@ vkrndr::imgui_render_layer::imgui_render_layer(
         device->present_queue->command_pool,
         vulkan_swap_chain::max_frames_in_flight,
         VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        command_buffers_);
+        command_buffers_.as_span());
 }
 
 vkrndr::imgui_render_layer::~imgui_render_layer()
@@ -131,7 +132,7 @@ VkCommandBuffer vkrndr::imgui_render_layer::draw(VkImage target_image,
     VkImageView target_image_view,
     VkExtent2D extent)
 {
-    auto& command_buffer{command_buffers_[current_frame_]};
+    auto& command_buffer{command_buffers_.top()};
 
     check_result(vkResetCommandBuffer(command_buffer, 0));
 
@@ -169,8 +170,7 @@ VkCommandBuffer vkrndr::imgui_render_layer::draw(VkImage target_image,
 
     check_result(vkEndCommandBuffer(command_buffer));
 
-    current_frame_ =
-        (current_frame_ + 1) % vulkan_swap_chain::max_frames_in_flight;
+    command_buffers_.cycle();
 
     return command_buffer;
 }

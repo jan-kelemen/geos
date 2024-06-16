@@ -1,6 +1,8 @@
 #ifndef VKRNDR_VULKAN_RENDERER_INCLUDED
 #define VKRNDR_VULKAN_RENDERER_INCLUDED
 
+#include <cppext_cyclic_stack.hpp>
+
 #include <vulkan/vulkan_core.h>
 
 #include <gltf_manager.hpp>
@@ -109,8 +111,8 @@ namespace vkrndr
 
         std::unique_ptr<vulkan_swap_chain> swap_chain_;
 
-        std::vector<VkCommandBuffer> command_buffers_;
-        std::vector<VkCommandBuffer> secondary_buffers_;
+        cppext::cyclic_stack<VkCommandBuffer> command_buffers_;
+        cppext::cyclic_stack<VkCommandBuffer> secondary_buffers_;
 
         VkDescriptorPool descriptor_pool_{};
 
@@ -119,8 +121,6 @@ namespace vkrndr
         std::unique_ptr<imgui_render_layer> imgui_layer_;
         std::unique_ptr<font_manager> font_manager_;
         std::unique_ptr<gltf_manager> gltf_manager_;
-
-        uint32_t current_frame_{};
     };
 } // namespace vkrndr
 

@@ -111,7 +111,7 @@ vkrndr::vulkan_swap_chain::vulkan_swap_chain(vulkan_window* window,
 
 vkrndr::vulkan_swap_chain::~vulkan_swap_chain() { cleanup(); }
 
-bool vkrndr::vulkan_swap_chain::acquire_next_image(uint32_t const current_frame,
+bool vkrndr::vulkan_swap_chain::acquire_next_image(size_t const current_frame,
     uint32_t& image_index)
 {
     constexpr auto timeout{std::numeric_limits<uint64_t>::max()};
@@ -143,7 +143,7 @@ bool vkrndr::vulkan_swap_chain::acquire_next_image(uint32_t const current_frame,
 
 void vkrndr::vulkan_swap_chain::submit_command_buffers(
     std::span<VkCommandBuffer const> command_buffers,
-    uint32_t const current_frame,
+    size_t const current_frame,
     uint32_t const image_index)
 {
     auto const& frame{frames_[current_frame]};

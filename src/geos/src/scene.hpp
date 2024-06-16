@@ -1,6 +1,8 @@
 #ifndef GEOS_SCENE_INLCUDED
 #define GEOS_SCENE_INLCUDED
 
+#include <cppext_cyclic_stack.hpp>
+
 #include <vulkan_buffer.hpp>
 #include <vulkan_image.hpp>
 #include <vulkan_memory.hpp>
@@ -90,10 +92,7 @@ namespace geos
         VkDescriptorSetLayout descriptor_set_layout_{VK_NULL_HANDLE};
         std::unique_ptr<vkrndr::vulkan_pipeline> pipeline_;
 
-        std::vector<frame_data> frame_data_;
-
-        uint32_t current_frame_{};
-        float aspect_ratio_{1.0f};
+        cppext::cyclic_stack<frame_data> frame_data_;
     };
 } // namespace geos
 
