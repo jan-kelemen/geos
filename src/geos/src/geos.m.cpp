@@ -1,5 +1,4 @@
-#include <camera.hpp>
-#include <scene.hpp>
+#include <application.hpp>
 
 #include <sdl_window.hpp>
 #include <vulkan_context.hpp>
@@ -11,6 +10,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 
 #include <vulkan/vulkan_core.h>
@@ -58,6 +58,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         512,
         512};
 
+    geos::application application;
+
     auto context{vkrndr::create_context(&window, enable_validation_layers)};
     auto device{vkrndr::create_device(context)};
     {
@@ -68,15 +70,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
             &swap_chain};
         renderer.set_imgui_layer(enable_validation_layers);
 
-        geos::scene scene;
-        geos::camera camera(glm::fvec3(3.0f, 3.0f, 3.0f),
-            glm::fvec3(0.0f, 0.0f, 0.0f),
-            45.0f,
-            1.0f,
-            0.1f,
-            10.f);
-        scene.attach_renderer(&device, &renderer);
+        application.attach_renderer(&device, &renderer);
 
+        uint64_t last_tick{SDL_GetPerformanceCounter()};
         bool done{false};
         while (!done)
         {
@@ -92,19 +88,26 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
                 {
                     done = true;
                 }
+
+                application.handle_event(event);
             }
 
+            uint64_t const current_tick{SDL_GetPerformanceCounter()};
+            float const delta{static_cast<float>(current_tick - last_tick) /
+                static_cast<float>(SDL_GetPerformanceFrequency())};
+            last_tick = current_tick;
+
             renderer.begin_frame();
-            scene.begin_frame();
-            scene.update(camera);
-            renderer.draw(&scene);
-            scene.end_frame();
+            application.begin_frame();
+            application.update(delta);
+            renderer.draw(&application);
+            application.end_frame();
             renderer.end_frame();
         }
 
         vkDeviceWaitIdle(device.logical);
 
-        scene.detach_renderer();
+        application.detach_renderer(&device, &renderer);
     }
 
     destroy(&device);

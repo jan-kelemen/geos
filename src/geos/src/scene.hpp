@@ -42,7 +42,8 @@ namespace geos
         void attach_renderer(vkrndr::vulkan_device* device,
             vkrndr::vulkan_renderer* renderer);
 
-        void detach_renderer();
+        void detach_renderer(vkrndr::vulkan_device* device,
+            vkrndr::vulkan_renderer* renderer);
 
         void begin_frame();
 

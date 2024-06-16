@@ -13,6 +13,7 @@
 #include <vulkan_utility.hpp>
 
 #include <cppext_numeric.hpp>
+#include <cppext_pragma_warning.hpp>
 
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,11 +35,16 @@
 
 namespace
 {
+    DISABLE_WARNING_PUSH
+    DISABLE_WARNING_STRUCTURE_WAS_PADDED_DUE_TO_ALIGNMENT_SPECIFIER
+
     struct [[nodiscard]] vertex final
     {
         alignas(16) glm::fvec3 position;
         alignas(16) glm::fvec3 color;
     };
+
+    DISABLE_WARNING_POP
 
     struct [[nodiscard]] transform final
     {
@@ -137,14 +143,11 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
     depth_buffer_ =
         vkrndr::create_depth_buffer(device, renderer->extent(), false);
 
-    std::shared_ptr<VkPipelineLayout> pipeline_layout{
-        vkrndr::vulkan_pipeline_layout_builder{vulkan_device_}
-            .add_descriptor_set_layout(descriptor_set_layout_)
-            .build()};
-
     pipeline_ = std::make_unique<vkrndr::vulkan_pipeline>(
         vkrndr::vulkan_pipeline_builder{vulkan_device_,
-            std::move(pipeline_layout),
+            vkrndr::vulkan_pipeline_layout_builder{vulkan_device_}
+                .add_descriptor_set_layout(descriptor_set_layout_)
+                .build(),
             renderer->image_format()}
             .add_shader(VK_SHADER_STAGE_VERTEX_BIT, "scene.vert.spv", "main")
             .add_shader(VK_SHADER_STAGE_FRAGMENT_BIT, "scene.frag.spv", "main")
@@ -184,30 +187,31 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
     }
 }
 
-void geos::scene::detach_renderer()
+void geos::scene::detach_renderer(vkrndr::vulkan_device* device,
+    vkrndr::vulkan_renderer* renderer)
 {
-    if (vulkan_device_)
+    if (device)
     {
         for (auto& data : frame_data_)
         {
-            vkFreeDescriptorSets(vulkan_device_->logical,
-                vulkan_renderer_->descriptor_pool(),
+            vkFreeDescriptorSets(device->logical,
+                renderer->descriptor_pool(),
                 1,
                 &data.descriptor_set_);
         }
 
-        destroy(vulkan_device_, pipeline_.get());
+        destroy(device, pipeline_.get());
         pipeline_.reset();
 
-        vkDestroyDescriptorSetLayout(vulkan_device_->logical,
+        vkDestroyDescriptorSetLayout(device->logical,
             descriptor_set_layout_,
             nullptr);
 
-        destroy(vulkan_device_, &depth_buffer_);
+        destroy(device, &depth_buffer_);
 
-        destroy(vulkan_device_, &vertex_uniform_buffer_);
+        destroy(device, &vertex_uniform_buffer_);
 
-        destroy(vulkan_device_, &vert_index_buffer_);
+        destroy(device, &vert_index_buffer_);
     }
     vulkan_device_ = nullptr;
 }
@@ -251,8 +255,6 @@ vkrndr::vulkan_image* geos::scene::depth_image() { return &depth_buffer_; }
 
 void geos::scene::resize(VkExtent2D const extent)
 {
-    aspect_ratio_ = cppext::as_fp(extent.width) / extent.height;
-
     destroy(vulkan_device_, &depth_buffer_);
     depth_buffer_ = vkrndr::create_depth_buffer(vulkan_device_, extent, false);
 }

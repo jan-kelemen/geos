@@ -2,8 +2,8 @@
 #define GEOS_CAMERA_INCLUDED
 
 #include <glm/fwd.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp> // IWYU pragma: keep
+#include <glm/vec3.hpp> // IWYU pragma: keep
 
 namespace geos
 {
@@ -44,6 +44,8 @@ namespace geos
     public:
         void update();
 
+        void resize(uint32_t width, uint32_t height);
+
         void debug();
 
     public:
@@ -52,11 +54,11 @@ namespace geos
         camera& operator=(camera&&) noexcept = default;
 
     private:
-        glm::fmat4 calculate_view_matrix();
+        [[nodiscard]] glm::fmat4 calculate_view_matrix() const;
 
-        glm::fmat4 calculate_projection_matrix();
+        [[nodiscard]] glm::fmat4 calculate_projection_matrix() const;
 
-        glm::fmat4 calculate_view_projection_matrix();
+        [[nodiscard]] glm::fmat4 calculate_view_projection_matrix() const;
 
     private:
         glm::fvec3 eye_;
