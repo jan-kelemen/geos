@@ -326,7 +326,9 @@ std::unique_ptr<vkrndr::gltf_model> vkrndr::gltf_manager::load(
                 gltf_primitive new_primitive{
                     .vertices = load_vertices(model, primitive),
                     .indices = load_indices(model, primitive),
-                    .material = &rv->materials[size_cast(primitive.material)]};
+                    .material = primitive.material >= 0
+                        ? &rv->materials[size_cast(primitive.material)]
+                        : nullptr};
 
                 new_mesh.primitives.push_back(std::move(new_primitive));
             }

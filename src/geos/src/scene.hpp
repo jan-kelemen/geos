@@ -87,6 +87,7 @@ namespace geos
         std::vector<frame_data> frame_data_;
 
         uint32_t current_frame_{};
+        float aspect_ratio_{1.0f};
     };
 } // namespace geos
 
