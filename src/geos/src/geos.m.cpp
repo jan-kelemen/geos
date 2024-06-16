@@ -1,3 +1,4 @@
+#include <camera.hpp>
 #include <scene.hpp>
 
 #include <sdl_window.hpp>
@@ -68,6 +69,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         renderer.set_imgui_layer(enable_validation_layers);
 
         geos::scene scene;
+        geos::camera camera(glm::fvec3(3.0f, 3.0f, 3.0f),
+            glm::fvec3(0.0f, 0.0f, 0.0f),
+            45.0f,
+            1.0f,
+            0.1f,
+            10.f);
         scene.attach_renderer(&device, &renderer);
 
         bool done{false};
@@ -89,7 +96,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
             renderer.begin_frame();
             scene.begin_frame();
-            scene.update();
+            scene.update(camera);
             renderer.draw(&scene);
             scene.end_frame();
             renderer.end_frame();

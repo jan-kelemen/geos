@@ -36,7 +36,7 @@ namespace vkrndr
     class [[nodiscard]] vulkan_pipeline_layout_builder final
     {
     public:
-        vulkan_pipeline_layout_builder(vulkan_device* device);
+        explicit vulkan_pipeline_layout_builder(vulkan_device* device);
 
         vulkan_pipeline_layout_builder(
             vulkan_pipeline_layout_builder const&) = delete;

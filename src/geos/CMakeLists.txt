@@ -2,6 +2,8 @@ add_executable(geos)
 
 target_sources(geos
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/camera.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/camera.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/geos.m.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.hpp

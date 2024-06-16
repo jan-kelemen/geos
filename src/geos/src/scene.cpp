@@ -1,5 +1,7 @@
 #include <scene.hpp>
 
+#include <camera.hpp>
+
 #include <vulkan_buffer.hpp>
 #include <vulkan_depth_buffer.hpp>
 #include <vulkan_descriptors.hpp>
@@ -20,6 +22,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstddef>
@@ -147,8 +150,7 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
             .add_shader(VK_SHADER_STAGE_FRAGMENT_BIT, "scene.frag.spv", "main")
             .with_rasterization_samples(vulkan_device_->max_msaa_samples)
             .add_vertex_input(binding_description(), attribute_descriptions())
-            .with_culling(VK_CULL_MODE_BACK_BIT,
-                VK_FRONT_FACE_COUNTER_CLOCKWISE)
+            .with_culling(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE)
             .with_depth_test(depth_buffer_.format)
             .build());
 
@@ -217,7 +219,7 @@ void geos::scene::begin_frame()
 
 void geos::scene::end_frame() { }
 
-void geos::scene::update()
+void geos::scene::update(camera const& camera)
 {
     {
         static auto start_time{std::chrono::high_resolution_clock::now()};
@@ -231,20 +233,11 @@ void geos::scene::update()
             vertex_uniform_buffer_.memory,
             frame_data_[current_frame_].uniform_buffer_region_)};
 
-        transform uniform{.model = glm::rotate(glm::mat4(1.0f),
-                              time * glm::radians(90.0f),
-                              glm::fvec3(0.0f, 0.0f, 1.0f)),
-            .view = glm::lookAt(glm::fvec3(3.0f, 3.0f, 3.0f),
-                glm::fvec3(0.0f, 0.0f, 0.0f),
-                glm::fvec3(0.0f, 0.0f, 1.0f)),
-            .projection = glm::perspective(glm::radians(45.0f),
-                aspect_ratio_,
-                0.1f,
-                10.0f)};
-
-        uniform.projection[1][1] *= -1;
-
-        *uniform_map.as<transform>() = uniform;
+        *uniform_map.as<transform>() = {.model = glm::rotate(glm::mat4(1.0f),
+                                            time * glm::radians(90.0f),
+                                            glm::fvec3(0.0f, 0.0f, 1.0f)),
+            .view = camera.view_matrix(),
+            .projection = camera.projection_matrix()};
 
         unmap_memory(vulkan_device_, &uniform_map);
     }

@@ -21,6 +21,11 @@ namespace vkrndr
 
 namespace geos
 {
+    class camera;
+} // namespace geos
+
+namespace geos
+{
     class [[nodiscard]] scene final : public vkrndr::vulkan_scene
     {
     public: // Construction
@@ -43,7 +48,7 @@ namespace geos
 
         void end_frame();
 
-        void update();
+        void update(camera const& camera);
 
     public: // vulkan_scene overrides
         [[nodiscard]] VkClearValue clear_color() override;
