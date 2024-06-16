@@ -17,7 +17,6 @@
 namespace vkrndr
 {
     class font_manager;
-
     class imgui_render_layer;
     struct vulkan_buffer;
     struct vulkan_context;
@@ -34,8 +33,7 @@ namespace vkrndr
     public: // Construction
         vulkan_renderer(vulkan_window* window,
             vulkan_context* context,
-            vulkan_device* device,
-            vulkan_swap_chain* swap_chain);
+            vulkan_device* device);
 
         vulkan_renderer(vulkan_renderer const&) = delete;
 
@@ -108,7 +106,8 @@ namespace vkrndr
         vulkan_window* window_;
         vulkan_context* context_;
         vulkan_device* device_;
-        vulkan_swap_chain* swap_chain_;
+
+        std::unique_ptr<vulkan_swap_chain> swap_chain_;
 
         std::vector<VkCommandBuffer> command_buffers_;
         std::vector<VkCommandBuffer> secondary_buffers_;

@@ -68,12 +68,13 @@ namespace
 
 vkrndr::vulkan_renderer::vulkan_renderer(vulkan_window* const window,
     vulkan_context* const context,
-    vulkan_device* const device,
-    vulkan_swap_chain* const swap_chain)
+    vulkan_device* const device)
     : window_{window}
     , context_{context}
     , device_{device}
-    , swap_chain_{swap_chain}
+    , swap_chain_{std::make_unique<vulkan_swap_chain>(window_,
+          context_,
+          device_)}
     , command_buffers_{vulkan_swap_chain::max_frames_in_flight}
     , secondary_buffers_{vulkan_swap_chain::max_frames_in_flight}
     , descriptor_pool_{create_descriptor_pool(device)}
@@ -131,7 +132,7 @@ void vkrndr::vulkan_renderer::set_imgui_layer(bool state)
         imgui_layer_ = std::make_unique<imgui_render_layer>(window_,
             context_,
             device_,
-            swap_chain_);
+            swap_chain_.get());
     }
 }
 

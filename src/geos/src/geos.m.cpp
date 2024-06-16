@@ -4,7 +4,6 @@
 #include <vulkan_context.hpp>
 #include <vulkan_device.hpp>
 #include <vulkan_renderer.hpp>
-#include <vulkan_swap_chain.hpp>
 
 #include <imgui_impl_sdl2.h>
 
@@ -63,11 +62,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto context{vkrndr::create_context(&window, enable_validation_layers)};
     auto device{vkrndr::create_device(context)};
     {
-        vkrndr::vulkan_swap_chain swap_chain{&window, &context, &device};
-        vkrndr::vulkan_renderer renderer{&window,
-            &context,
-            &device,
-            &swap_chain};
+        vkrndr::vulkan_renderer renderer{&window, &context, &device};
         renderer.set_imgui_layer(enable_validation_layers);
 
         application.attach_renderer(&device, &renderer);

@@ -4,7 +4,7 @@ target_sources(vkrndr
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include/font_manager.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/gltf_manager.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/imgui_render_layer.hpp
+        
         ${CMAKE_CURRENT_SOURCE_DIR}/include/sdl_window.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_buffer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_commands.hpp
@@ -20,7 +20,6 @@ target_sources(vkrndr
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_renderer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_scene.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_synchronization.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_swap_chain.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_utility.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/vulkan_window.hpp
     PRIVATE
@@ -29,6 +28,7 @@ target_sources(vkrndr
         ${CMAKE_CURRENT_SOURCE_DIR}/src/global_data.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/global_data.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui_render_layer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/imgui_render_layer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/sdl_window.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_buffer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_commands.cpp
@@ -45,6 +45,7 @@ target_sources(vkrndr
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_scene.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_synchronization.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_swap_chain.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_swap_chain.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan_utility.cpp
 )
 

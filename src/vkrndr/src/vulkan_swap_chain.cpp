@@ -63,36 +63,36 @@ vkrndr::query_swap_chain_support(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
     vkrndr::swap_chain_support rv;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device,
+    check_result(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device,
         surface,
-        &rv.capabilities);
+        &rv.capabilities));
 
     uint32_t format_count{};
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device,
+    check_result(vkGetPhysicalDeviceSurfaceFormatsKHR(device,
         surface,
         &format_count,
-        nullptr);
+        nullptr));
     if (format_count != 0)
     {
         rv.surface_formats.resize(format_count);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device,
+        check_result(vkGetPhysicalDeviceSurfaceFormatsKHR(device,
             surface,
             &format_count,
-            rv.surface_formats.data());
+            rv.surface_formats.data()));
     }
 
     uint32_t present_count{};
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device,
+    check_result(vkGetPhysicalDeviceSurfacePresentModesKHR(device,
         surface,
         &present_count,
-        nullptr);
+        nullptr));
     if (present_count != 0)
     {
         rv.present_modes.resize(present_count);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device,
+        check_result(vkGetPhysicalDeviceSurfacePresentModesKHR(device,
             surface,
             &present_count,
-            rv.present_modes.data());
+            rv.present_modes.data()));
     }
 
     return rv;
