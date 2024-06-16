@@ -4,6 +4,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -20,16 +21,60 @@ namespace vkrndr
 {
     struct [[nodiscard]] vulkan_pipeline final
     {
-        VkPipelineLayout pipeline_layout;
+        std::shared_ptr<VkPipelineLayout> pipeline_layout;
         VkPipeline pipeline;
     };
 
+    void bind_pipeline(VkCommandBuffer command_buffer,
+        vulkan_pipeline const& pipeline,
+        VkPipelineBindPoint bind_point,
+        uint32_t first_set,
+        std::span<VkDescriptorSet const> descriptor_sets);
+
     void destroy(vulkan_device* device, vulkan_pipeline* pipeline);
+
+    class [[nodiscard]] vulkan_pipeline_layout_builder final
+    {
+    public:
+        vulkan_pipeline_layout_builder(vulkan_device* device);
+
+        vulkan_pipeline_layout_builder(
+            vulkan_pipeline_layout_builder const&) = delete;
+
+        vulkan_pipeline_layout_builder(
+            vulkan_pipeline_layout_builder&&) noexcept = delete;
+
+    public:
+        ~vulkan_pipeline_layout_builder() = default;
+
+    public:
+        [[nodiscard]] std::shared_ptr<VkPipelineLayout> build();
+
+        vulkan_pipeline_layout_builder& add_descriptor_set_layout(
+            VkDescriptorSetLayout descriptor_set_layout);
+
+        vulkan_pipeline_layout_builder& add_push_constants(
+            VkPushConstantRange push_constant_range);
+
+    public:
+        vulkan_pipeline_layout_builder& operator=(
+            vulkan_pipeline_layout_builder const&) = delete;
+
+        vulkan_pipeline_layout_builder& operator=(
+            vulkan_pipeline_layout_builder&&) = delete;
+
+    private:
+        vulkan_device* device_;
+        std::vector<VkDescriptorSetLayout> descriptor_set_layouts_;
+        std::vector<VkPushConstantRange> push_constants_;
+    };
 
     class [[nodiscard]] vulkan_pipeline_builder final
     {
     public: // Construction
-        vulkan_pipeline_builder(vulkan_device* device, VkFormat image_format);
+        vulkan_pipeline_builder(vulkan_device* device,
+            std::shared_ptr<VkPipelineLayout> pipeline_layout,
+            VkFormat image_format);
 
         vulkan_pipeline_builder(vulkan_pipeline_builder const&) = delete;
 
@@ -51,14 +96,8 @@ namespace vkrndr
             std::span<VkVertexInputAttributeDescription const>
                 attribute_descriptions);
 
-        vulkan_pipeline_builder& add_descriptor_set_layout(
-            VkDescriptorSetLayout descriptor_set_layout);
-
         vulkan_pipeline_builder& with_rasterization_samples(
             VkSampleCountFlagBits samples);
-
-        vulkan_pipeline_builder& with_push_constants(
-            VkPushConstantRange push_constants);
 
         vulkan_pipeline_builder& with_culling(VkCullModeFlags cull_mode,
             VkFrontFace front_face);
@@ -84,15 +123,14 @@ namespace vkrndr
 
     private: // Data
         vulkan_device* device_{};
+        std::shared_ptr<VkPipelineLayout> pipeline_layout_{};
         VkFormat image_format_{};
         std::vector<
             std::tuple<VkShaderStageFlagBits, VkShaderModule, std::string>>
             shaders_;
         std::vector<VkVertexInputBindingDescription> vertex_input_binding_;
         std::vector<VkVertexInputAttributeDescription> vertex_input_attributes_;
-        std::vector<VkDescriptorSetLayout> descriptor_set_layouts_;
         VkSampleCountFlagBits rasterization_samples_{VK_SAMPLE_COUNT_1_BIT};
-        std::optional<VkPushConstantRange> push_constants_;
         VkCullModeFlags cull_mode_{VK_CULL_MODE_NONE};
         VkFrontFace front_face_{VK_FRONT_FACE_COUNTER_CLOCKWISE};
         std::optional<VkPipelineColorBlendAttachmentState> color_blending_;

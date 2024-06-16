@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <span>
 #include <stdexcept>
 #include <utility>
@@ -61,10 +62,91 @@ namespace
     }
 } // namespace
 
+void vkrndr::bind_pipeline(VkCommandBuffer command_buffer,
+    vulkan_pipeline const& pipeline,
+    VkPipelineBindPoint const bind_point,
+    uint32_t const first_set,
+    std::span<VkDescriptorSet const> descriptor_sets)
+{
+    vkCmdBindDescriptorSets(command_buffer,
+        bind_point,
+        *pipeline.pipeline_layout,
+        first_set,
+        count_cast(descriptor_sets.size()),
+        descriptor_sets.data(),
+        0,
+        nullptr);
+
+    vkCmdBindPipeline(command_buffer, bind_point, pipeline.pipeline);
+}
+
+void vkrndr::destroy(vulkan_device* const device,
+    vulkan_pipeline* const pipeline)
+{
+    if (pipeline)
+    {
+        vkDestroyPipeline(device->logical, pipeline->pipeline, nullptr);
+        if (pipeline->pipeline_layout.use_count() == 1)
+        {
+            vkDestroyPipelineLayout(device->logical,
+                *pipeline->pipeline_layout,
+                nullptr);
+            pipeline->pipeline_layout.reset();
+        }
+    }
+}
+
+vkrndr::vulkan_pipeline_layout_builder::vulkan_pipeline_layout_builder(
+    vulkan_device* const device)
+    : device_{device}
+{
+}
+
+std::shared_ptr<VkPipelineLayout>
+vkrndr::vulkan_pipeline_layout_builder::build()
+{
+    VkPipelineLayoutCreateInfo pipeline_layout_info{};
+    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    pipeline_layout_info.pushConstantRangeCount =
+        count_cast(push_constants_.size());
+    pipeline_layout_info.pPushConstantRanges = push_constants_.data();
+
+    pipeline_layout_info.setLayoutCount =
+        count_cast(descriptor_set_layouts_.size());
+    pipeline_layout_info.pSetLayouts = descriptor_set_layouts_.data();
+
+    VkPipelineLayout rv; // NOLINT
+    vkrndr::check_result(vkCreatePipelineLayout(device_->logical,
+        &pipeline_layout_info,
+        nullptr,
+        &rv));
+
+    return std::make_shared<VkPipelineLayout>(rv);
+}
+
+vkrndr::vulkan_pipeline_layout_builder&
+vkrndr::vulkan_pipeline_layout_builder::add_descriptor_set_layout(
+    VkDescriptorSetLayout descriptor_set_layout)
+{
+    descriptor_set_layouts_.push_back(descriptor_set_layout);
+    return *this;
+}
+
+vkrndr::vulkan_pipeline_layout_builder&
+vkrndr::vulkan_pipeline_layout_builder::add_push_constants(
+    VkPushConstantRange push_constant_range)
+{
+    push_constants_.push_back(push_constant_range);
+    return *this;
+}
+
 vkrndr::vulkan_pipeline_builder::vulkan_pipeline_builder(
     vulkan_device* const device,
+    std::shared_ptr<VkPipelineLayout> pipeline_layout,
     VkFormat const image_format)
     : device_{device}
+    , pipeline_layout_{std::move(pipeline_layout)}
     , image_format_{image_format}
 {
 }
@@ -153,25 +235,7 @@ vkrndr::vulkan_pipeline vkrndr::vulkan_pipeline_builder::build()
     dynamic_state.dynamicStateCount = count_cast(dynamic_states.size()),
     dynamic_state.pDynamicStates = dynamic_states.data();
 
-    VkPipelineLayoutCreateInfo pipeline_layout_info{};
-    pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    if (push_constants_)
-    {
-        pipeline_layout_info.pushConstantRangeCount = 1;
-        pipeline_layout_info.pPushConstantRanges = &(*push_constants_);
-    }
-
-    pipeline_layout_info.setLayoutCount =
-        count_cast(descriptor_set_layouts_.size());
-    pipeline_layout_info.pSetLayouts = descriptor_set_layouts_.data();
-
-    VkPipelineLayout pipeline_layout; // NOLINT
-    vkrndr::check_result(vkCreatePipelineLayout(device_->logical,
-        &pipeline_layout_info,
-        nullptr,
-        &pipeline_layout));
-
-    VkPipelineRenderingCreateInfoKHR rendering_create_info{};
+    VkPipelineRenderingCreateInfo rendering_create_info{};
     rendering_create_info.sType =
         VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     rendering_create_info.colorAttachmentCount = 1;
@@ -200,7 +264,7 @@ vkrndr::vulkan_pipeline vkrndr::vulkan_pipeline_builder::build()
     }
     create_info.stageCount = count_cast(shader_stages.size());
     create_info.pStages = shader_stages.data();
-    create_info.layout = pipeline_layout;
+    create_info.layout = *pipeline_layout_;
     create_info.pNext = &rendering_create_info;
 
     VkPipeline pipeline; // NOLINT
@@ -211,9 +275,11 @@ vkrndr::vulkan_pipeline vkrndr::vulkan_pipeline_builder::build()
         nullptr,
         &pipeline));
 
+    vulkan_pipeline rv{pipeline_layout_, pipeline};
+
     cleanup();
 
-    return {pipeline_layout, pipeline};
+    return rv;
 }
 
 vkrndr::vulkan_pipeline_builder& vkrndr::vulkan_pipeline_builder::add_shader(
@@ -250,27 +316,10 @@ vkrndr::vulkan_pipeline_builder::add_vertex_input(
 }
 
 vkrndr::vulkan_pipeline_builder&
-vkrndr::vulkan_pipeline_builder::add_descriptor_set_layout(
-    VkDescriptorSetLayout const descriptor_set_layout)
-{
-    descriptor_set_layouts_.emplace_back(descriptor_set_layout);
-    return *this;
-}
-
-vkrndr::vulkan_pipeline_builder&
 vkrndr::vulkan_pipeline_builder::with_rasterization_samples(
     VkSampleCountFlagBits const samples)
 {
     rasterization_samples_ = samples;
-    return *this;
-}
-
-vkrndr::vulkan_pipeline_builder&
-vkrndr::vulkan_pipeline_builder::with_push_constants(
-    VkPushConstantRange const push_constants)
-{
-    push_constants_ = push_constants;
-
     return *this;
 }
 
@@ -362,7 +411,6 @@ vkrndr::vulkan_pipeline_builder::with_stencil_test(VkFormat depth_format,
 
 void vkrndr::vulkan_pipeline_builder::cleanup()
 {
-    descriptor_set_layouts_.clear();
     vertex_input_attributes_.clear();
     vertex_input_binding_.clear();
 
@@ -372,16 +420,6 @@ void vkrndr::vulkan_pipeline_builder::cleanup()
     }
 
     shaders_.clear();
-}
 
-void vkrndr::destroy(vulkan_device* const device,
-    vulkan_pipeline* const pipeline)
-{
-    if (pipeline)
-    {
-        vkDestroyPipeline(device->logical, pipeline->pipeline, nullptr);
-        vkDestroyPipelineLayout(device->logical,
-            pipeline->pipeline_layout,
-            nullptr);
-    }
+    pipeline_layout_.reset();
 }

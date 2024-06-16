@@ -130,14 +130,19 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
     depth_buffer_ =
         vkrndr::create_depth_buffer(device, renderer->extent(), false);
 
+    std::shared_ptr<VkPipelineLayout> pipeline_layout{
+        vkrndr::vulkan_pipeline_layout_builder{vulkan_device_}
+            .add_descriptor_set_layout(descriptor_set_layout_)
+            .build()};
+
     pipeline_ = std::make_unique<vkrndr::vulkan_pipeline>(
         vkrndr::vulkan_pipeline_builder{vulkan_device_,
+            std::move(pipeline_layout),
             renderer->image_format()}
             .add_shader(VK_SHADER_STAGE_VERTEX_BIT, "scene.vert.spv", "main")
             .add_shader(VK_SHADER_STAGE_FRAGMENT_BIT, "scene.frag.spv", "main")
             .with_rasterization_samples(vulkan_device_->max_msaa_samples)
             .add_vertex_input(binding_description(), attribute_descriptions())
-            .add_descriptor_set_layout(descriptor_set_layout_)
             .with_depth_test(depth_buffer_.format)
             .build());
 
@@ -251,10 +256,6 @@ void geos::scene::resize(VkExtent2D const extent)
 
 void geos::scene::draw(VkCommandBuffer command_buffer, VkExtent2D const extent)
 {
-    vkCmdBindPipeline(command_buffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline_->pipeline);
-
     size_t const index_offset{8 * sizeof(vertex)};
     VkDeviceSize const zero_offsets{0};
     vkCmdBindVertexBuffers(command_buffer,
@@ -278,14 +279,13 @@ void geos::scene::draw(VkCommandBuffer command_buffer, VkExtent2D const extent)
     VkRect2D const scissor{{0, 0}, extent};
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-    vkCmdBindDescriptorSets(command_buffer,
+    vkrndr::bind_pipeline(command_buffer,
+        *pipeline_,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline_->pipeline_layout,
         0,
-        1,
-        &frame_data_[current_frame_].descriptor_set_,
-        0,
-        nullptr);
+        std::span<VkDescriptorSet const>{
+            &frame_data_[current_frame_].descriptor_set_,
+            1});
 
     vkCmdDrawIndexed(command_buffer, 12, 1, 0, 0, 0);
 }
