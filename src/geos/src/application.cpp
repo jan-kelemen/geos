@@ -99,8 +99,13 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     auto const& cube_primitive{cube->nodes[0].mesh->primitives[0]};
 
-    size_t const vertices_size{cube_primitive.vertices.size() * sizeof(vertex)};
-    size_t const indices_size{cube_primitive.indices.size() * sizeof(uint32_t)};
+    buffer_part cube_submesh{.vertex_offset = 0,
+        .vertex_count = vkrndr::count_cast(cube_primitive.vertices.size()),
+        .index_offset = 0,
+        .index_count = vkrndr::count_cast(cube_primitive.indices.size())};
+
+    size_t const vertices_size{cube_submesh.vertex_count * sizeof(vertex)};
+    size_t const indices_size{cube_submesh.index_count * sizeof(uint32_t)};
 
     vkrndr::vulkan_buffer staging_buffer{vkrndr::create_buffer(device,
         vertices_size + indices_size,
@@ -134,22 +139,17 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
     auto const cube_entity{registry_.create()};
 
     vkrndr::vulkan_buffer vert_index_buffer = create_buffer(device,
-        vertices_size + indices_size,
+        staging_buffer.size,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     renderer->transfer_buffer(staging_buffer, vert_index_buffer);
     destroy(device, &staging_buffer);
 
-    submesh submesh{.vertex_offset = 0,
-        .vertex_count = vkrndr::count_cast(cube_primitive.vertices.size()),
-        .index_offset = 0,
-        .index_count = vkrndr::count_cast(cube_primitive.indices.size())};
-
-    mesh mesh{.vert_index_buffer = vert_index_buffer,
+    gpu_mesh mesh{.vert_index_buffer = vert_index_buffer,
         .vertex_offset = 0,
         .index_offset = vertices_size,
-        .submeshes = {submesh}};
+        .submeshes = {cube_submesh}};
 
     registry_.emplace<mesh_component>(cube_entity, mesh);
 }

@@ -24,7 +24,7 @@ namespace vkrndr
 namespace geos
 {
     class camera;
-    struct mesh;
+    struct gpu_mesh;
 } // namespace geos
 
 namespace geos
@@ -54,7 +54,7 @@ namespace geos
 
         void update(camera const& camera);
 
-    public: // vulkan_scene overrides
+    public:
         [[nodiscard]] VkClearValue clear_color();
 
         [[nodiscard]] VkClearValue clear_depth();
@@ -63,7 +63,7 @@ namespace geos
 
         void resize(VkExtent2D extent);
 
-        void draw(mesh const& mesh,
+        void draw(gpu_mesh const& mesh,
             VkCommandBuffer command_buffer,
             VkExtent2D extent);
 

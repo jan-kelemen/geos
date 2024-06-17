@@ -243,7 +243,7 @@ void geos::scene::resize(VkExtent2D const extent)
     depth_buffer_ = vkrndr::create_depth_buffer(vulkan_device_, extent, false);
 }
 
-void geos::scene::draw(mesh const& mesh,
+void geos::scene::draw(gpu_mesh const& mesh,
     VkCommandBuffer command_buffer,
     VkExtent2D const extent)
 {

@@ -15,7 +15,7 @@
 
 namespace geos
 {
-    struct [[nodiscard]] submesh final
+    struct [[nodiscard]] buffer_part final
     {
         int32_t vertex_offset;
         uint32_t vertex_count;
@@ -23,17 +23,17 @@ namespace geos
         uint32_t index_count;
     };
 
-    struct [[nodiscard]] mesh final
+    struct [[nodiscard]] gpu_mesh final
     {
         vkrndr::vulkan_buffer vert_index_buffer;
         VkDeviceSize vertex_offset;
         VkDeviceSize index_offset;
-        std::vector<submesh> submeshes;
+        std::vector<buffer_part> submeshes;
     };
 
     struct [[nodiscard]] mesh_component final
     {
-        mesh mesh;
+        gpu_mesh mesh;
     };
 
     DISABLE_WARNING_PUSH
