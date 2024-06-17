@@ -1,6 +1,13 @@
 #include <application.hpp>
 
+#include <mesh.hpp>
+
 #include <cppext_numeric.hpp>
+
+#include <gltf_manager.hpp>
+#include <vulkan_buffer.hpp>
+#include <vulkan_renderer.hpp>
+#include <vulkan_utility.hpp>
 
 geos::application::application()
     : camera_{glm::fvec3{3.0f, 3.0f, 3.0f},
@@ -41,12 +48,20 @@ void geos::application::update([[maybe_unused]] float delta_time)
 void geos::application::attach_renderer(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* const renderer)
 {
+    load_meshes(device, renderer);
     scene_.attach_renderer(device, renderer);
 }
 
 void geos::application::detach_renderer(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* renderer)
 {
+    for (auto entity : registry_.view<mesh_component>())
+    {
+        destroy(device,
+            &registry_.get<mesh_component>(entity).mesh.vert_index_buffer);
+    }
+    registry_.clear<mesh_component>();
+
     scene_.detach_renderer(device, renderer);
 }
 
@@ -62,16 +77,79 @@ vkrndr::vulkan_image* geos::application::depth_image()
 void geos::application::resize(VkExtent2D extent)
 {
     camera_.resize(extent.width, extent.height);
-    return scene_.resize(extent);
+    scene_.resize(extent);
 }
 
 void geos::application::draw(VkCommandBuffer command_buffer, VkExtent2D extent)
 {
-    return scene_.draw(command_buffer, extent);
+    for (auto entity : registry_.view<mesh_component>())
+    {
+        scene_.draw(registry_.get<mesh_component>(entity).mesh,
+            command_buffer,
+            extent);
+    }
 }
 
-void geos::application::draw_imgui()
+void geos::application::draw_imgui() { camera_.debug(); }
+
+void geos::application::load_meshes(vkrndr::vulkan_device* const device,
+    vkrndr::vulkan_renderer* const renderer)
 {
-    camera_.debug();
-    scene_.draw_imgui();
+    std::unique_ptr<vkrndr::gltf_model> cube{renderer->load_model("cube.gltf")};
+
+    auto const& cube_primitive{cube->nodes[0].mesh->primitives[0]};
+
+    size_t const vertices_size{cube_primitive.vertices.size() * sizeof(vertex)};
+    size_t const indices_size{cube_primitive.indices.size() * sizeof(uint32_t)};
+
+    vkrndr::vulkan_buffer staging_buffer{vkrndr::create_buffer(device,
+        vertices_size + indices_size,
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
+    {
+        vkrndr::mapped_memory vert_index_map{vkrndr::map_memory(device,
+            staging_buffer.memory,
+            vkrndr::memory_region{.offset = 0,
+                .size = vertices_size + indices_size})};
+
+        vertex* const vertices{vert_index_map.as<vertex>(0)};
+        uint32_t* const indices{vert_index_map.as<uint32_t>(vertices_size)};
+
+        float color{-1.0f / 36};
+        std::ranges::transform(cube_primitive.vertices,
+            vertices,
+            [&](vkrndr::gltf_vertex const& vert)
+            {
+                color += 1.0f / 36;
+                return vertex{.position = vert.position,
+                    .color = glm::fvec3(color, color, color)};
+            });
+
+        std::ranges::copy(cube_primitive.indices, indices);
+
+        unmap_memory(device, &vert_index_map);
+    }
+
+    auto const cube_entity{registry_.create()};
+
+    vkrndr::vulkan_buffer vert_index_buffer = create_buffer(device,
+        vertices_size + indices_size,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    renderer->transfer_buffer(staging_buffer, vert_index_buffer);
+    destroy(device, &staging_buffer);
+
+    submesh submesh{.vertex_offset = 0,
+        .vertex_count = vkrndr::count_cast(cube_primitive.vertices.size()),
+        .index_offset = 0,
+        .index_count = vkrndr::count_cast(cube_primitive.indices.size())};
+
+    mesh mesh{.vert_index_buffer = vert_index_buffer,
+        .vertex_offset = 0,
+        .index_offset = vertices_size,
+        .submeshes = {submesh}};
+
+    registry_.emplace<mesh_component>(cube_entity, mesh);
 }

@@ -7,6 +7,8 @@ target_sources(geos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/camera.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/camera.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/geos.m.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/mesh.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/mesh.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.hpp
 )

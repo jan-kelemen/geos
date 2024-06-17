@@ -24,11 +24,12 @@ namespace vkrndr
 namespace geos
 {
     class camera;
+    struct mesh;
 } // namespace geos
 
 namespace geos
 {
-    class [[nodiscard]] scene final : public vkrndr::vulkan_scene
+    class [[nodiscard]] scene final
     {
     public: // Construction
         scene();
@@ -38,7 +39,7 @@ namespace geos
         scene(scene&&) noexcept = delete;
 
     public: // Destruction
-        ~scene() override;
+        ~scene();
 
     public: // Interface
         void attach_renderer(vkrndr::vulkan_device* device,
@@ -54,17 +55,17 @@ namespace geos
         void update(camera const& camera);
 
     public: // vulkan_scene overrides
-        [[nodiscard]] VkClearValue clear_color() override;
+        [[nodiscard]] VkClearValue clear_color();
 
-        [[nodiscard]] VkClearValue clear_depth() override;
+        [[nodiscard]] VkClearValue clear_depth();
 
-        [[nodiscard]] vkrndr::vulkan_image* depth_image() override;
+        [[nodiscard]] vkrndr::vulkan_image* depth_image();
 
-        void resize(VkExtent2D extent) override;
+        void resize(VkExtent2D extent);
 
-        void draw(VkCommandBuffer command_buffer, VkExtent2D extent) override;
-
-        void draw_imgui() override;
+        void draw(mesh const& mesh,
+            VkCommandBuffer command_buffer,
+            VkExtent2D extent);
 
     public: // Operators
         scene& operator=(scene const&) = delete;
@@ -78,14 +79,10 @@ namespace geos
             vkrndr::memory_region uniform_buffer_region_;
         };
 
-    private:
-        void load_vertices();
-
     private: // Data
         vkrndr::vulkan_device* vulkan_device_{};
         vkrndr::vulkan_renderer* vulkan_renderer_{};
 
-        vkrndr::vulkan_buffer vert_index_buffer_;
         vkrndr::vulkan_buffer vertex_uniform_buffer_;
         vkrndr::vulkan_image depth_buffer_;
 

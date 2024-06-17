@@ -1,6 +1,7 @@
 #include <scene.hpp>
 
 #include <camera.hpp>
+#include <mesh.hpp>
 
 #include <vulkan_buffer.hpp>
 #include <vulkan_depth_buffer.hpp>
@@ -35,17 +36,6 @@
 
 namespace
 {
-    DISABLE_WARNING_PUSH
-    DISABLE_WARNING_STRUCTURE_WAS_PADDED_DUE_TO_ALIGNMENT_SPECIFIER
-
-    struct [[nodiscard]] vertex final
-    {
-        alignas(16) glm::fvec3 position;
-        alignas(16) glm::fvec3 color;
-    };
-
-    DISABLE_WARNING_POP
-
     struct [[nodiscard]] transform final
     {
         glm::fmat4 model;
@@ -57,7 +47,7 @@ namespace
     {
         constexpr std::array descriptions{
             VkVertexInputBindingDescription{.binding = 0,
-                .stride = sizeof(vertex),
+                .stride = sizeof(geos::vertex),
                 .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
 
         return descriptions;
@@ -69,11 +59,11 @@ namespace
             VkVertexInputAttributeDescription{.location = 0,
                 .binding = 0,
                 .format = VK_FORMAT_R32G32B32_SFLOAT,
-                .offset = offsetof(vertex, position)},
+                .offset = offsetof(geos::vertex, position)},
             VkVertexInputAttributeDescription{.location = 1,
                 .binding = 0,
                 .format = VK_FORMAT_R32G32B32_SFLOAT,
-                .offset = offsetof(vertex, color)}};
+                .offset = offsetof(geos::vertex, color)}};
 
         return descriptions;
     }
@@ -157,8 +147,6 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
             .with_depth_test(depth_buffer_.format)
             .build());
 
-    load_vertices();
-
     auto const uniform_buffer_size{sizeof(transform)};
     vertex_uniform_buffer_ = create_buffer(vulkan_device_,
         uniform_buffer_size * renderer->image_count(),
@@ -211,8 +199,6 @@ void geos::scene::detach_renderer(vkrndr::vulkan_device* device,
         destroy(device, &depth_buffer_);
 
         destroy(device, &vertex_uniform_buffer_);
-
-        destroy(device, &vert_index_buffer_);
     }
     vulkan_device_ = nullptr;
 }
@@ -257,18 +243,19 @@ void geos::scene::resize(VkExtent2D const extent)
     depth_buffer_ = vkrndr::create_depth_buffer(vulkan_device_, extent, false);
 }
 
-void geos::scene::draw(VkCommandBuffer command_buffer, VkExtent2D const extent)
+void geos::scene::draw(mesh const& mesh,
+    VkCommandBuffer command_buffer,
+    VkExtent2D const extent)
 {
-    size_t const index_offset{24 * sizeof(vertex)};
-    VkDeviceSize const zero_offsets{0};
     vkCmdBindVertexBuffers(command_buffer,
         0,
         1,
-        &vert_index_buffer_.buffer,
-        &zero_offsets);
+        &mesh.vert_index_buffer.buffer,
+        &mesh.vertex_offset);
+
     vkCmdBindIndexBuffer(command_buffer,
-        vert_index_buffer_.buffer,
-        index_offset,
+        mesh.vert_index_buffer.buffer,
+        mesh.index_offset,
         VK_INDEX_TYPE_UINT32);
 
     VkViewport const viewport{.x = 0.0f,
@@ -290,55 +277,13 @@ void geos::scene::draw(VkCommandBuffer command_buffer, VkExtent2D const extent)
         std::span<VkDescriptorSet const>{&frame_data_.top().descriptor_set_,
             1});
 
-    vkCmdDrawIndexed(command_buffer, 36, 1, 0, 0, 0);
-}
-
-void geos::scene::draw_imgui() { }
-
-void geos::scene::load_vertices()
-{
-    std::unique_ptr<vkrndr::gltf_model> cube{
-        vulkan_renderer_->load_model("cube.gltf")};
-
-    auto const& cube_primitive{cube->nodes[0].mesh->primitives[0]};
-
-    size_t const vertices_size{cube_primitive.vertices.size() * sizeof(vertex)};
-    size_t const indices_size{cube_primitive.indices.size() * sizeof(uint32_t)};
-
-    vkrndr::vulkan_buffer staging_buffer{create_buffer(vulkan_device_,
-        vertices_size + indices_size,
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
+    for (auto const submesh : mesh.submeshes)
     {
-        vkrndr::mapped_memory vert_index_map{vkrndr::map_memory(vulkan_device_,
-            staging_buffer.memory,
-            vkrndr::memory_region{.offset = 0,
-                .size = vertices_size + indices_size})};
-
-        vertex* const vertices{vert_index_map.as<vertex>(0)};
-        uint32_t* const indices{vert_index_map.as<uint32_t>(vertices_size)};
-
-        float color{-1.0f / 36};
-        std::ranges::transform(cube_primitive.vertices,
-            vertices,
-            [&](vkrndr::gltf_vertex const& vert)
-            {
-                color += 1.0f / 36;
-                return vertex{.position = vert.position,
-                    .color = glm::fvec3(color, color, color)};
-            });
-
-        std::ranges::copy(cube_primitive.indices, indices);
-
-        unmap_memory(vulkan_device_, &vert_index_map);
+        vkCmdDrawIndexed(command_buffer,
+            submesh.index_count,
+            1,
+            vkrndr::count_cast(submesh.index_offset),
+            submesh.vertex_offset,
+            0);
     }
-
-    vert_index_buffer_ = create_buffer(vulkan_device_,
-        vertices_size + indices_size,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    vulkan_renderer_->transfer_buffer(staging_buffer, vert_index_buffer_);
-    destroy(vulkan_device_, &staging_buffer);
 }

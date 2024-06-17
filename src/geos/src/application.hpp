@@ -68,6 +68,10 @@ namespace geos
         application& operator=(application&&) = delete;
 
     private:
+        void load_meshes(vkrndr::vulkan_device* device,
+            vkrndr::vulkan_renderer* renderer);
+
+    private:
         entt::registry registry_;
 
         camera camera_;
