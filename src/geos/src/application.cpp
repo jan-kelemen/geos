@@ -10,12 +10,12 @@
 #include <vulkan_utility.hpp>
 
 geos::application::application()
-    : camera_{glm::fvec3{3.0f, 3.0f, 3.0f},
-          glm::fvec3{0.0f, 0.0f, 0.0f},
+    : camera_{glm::fvec3{10.0f, 10.0f, 10.0f},
+          glm::fvec3{2.0f, -5.0f, 0.0f},
           45.0f,
           1.0f,
           0.1f,
-          10.f}
+          100.f}
 {
 }
 
@@ -39,10 +39,22 @@ void geos::application::begin_frame() { scene_.begin_frame(); }
 
 void geos::application::end_frame() { scene_.end_frame(); }
 
-void geos::application::update([[maybe_unused]] float delta_time)
+void geos::application::update(float const delta_time)
 {
+    physics_simulation_.update(delta_time);
+
     camera_.update();
-    scene_.update(camera_);
+
+    for (auto entity : registry_.view<physics_component>())
+    {
+        btTransform const transform{
+            registry_.get<physics_component>(entity).position()};
+        glm::fvec3 const gpu_transform{transform.getOrigin().getX(),
+            transform.getOrigin().getY(),
+            transform.getOrigin().getZ()};
+
+        scene_.update(camera_, gpu_transform);
+    }
 }
 
 void geos::application::attach_renderer(vkrndr::vulkan_device* const device,
@@ -152,4 +164,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         .submeshes = {cube_submesh}};
 
     registry_.emplace<mesh_component>(cube_entity, mesh);
+
+    registry_.emplace<physics_component>(cube_entity,
+        physics_simulation_.add_rigid_body());
 }

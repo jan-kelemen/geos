@@ -2,6 +2,7 @@
 #define GEOS_APPLICATION_INCLUDED
 
 #include <camera.hpp>
+#include <physics.hpp>
 #include <scene.hpp>
 
 #include <vulkan_scene.hpp>
@@ -73,6 +74,8 @@ namespace geos
 
     private:
         entt::registry registry_;
+
+        physics_simulation physics_simulation_;
 
         camera camera_;
         scene scene_;

@@ -8,6 +8,9 @@
 #include <vulkan_memory.hpp>
 #include <vulkan_scene.hpp>
 
+#include <glm/fwd.hpp>
+#include <glm/vec3.hpp> // IWYU pragma: keep
+
 #include <vulkan/vulkan_core.h>
 
 #include <cstdint>
@@ -52,7 +55,7 @@ namespace geos
 
         void end_frame();
 
-        void update(camera const& camera);
+        void update(camera const& camera, glm::fvec3 const& translate);
 
     public:
         [[nodiscard]] VkClearValue clear_color();

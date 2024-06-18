@@ -18,7 +18,7 @@ geos::camera::camera(glm::fvec3 const& eye,
     float const far_plane)
     : eye_{eye}
     , center_{center}
-    , up_direction_{0.0f, 0.0f, -1.0f}
+    , up_direction_{0.0f, -1.0f, 0.0f}
     , fov_{fov}
     , aspect_ratio_{aspect_ratio}
     , near_plane_{near_plane}

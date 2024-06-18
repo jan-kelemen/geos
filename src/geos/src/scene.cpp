@@ -207,7 +207,7 @@ void geos::scene::begin_frame() { frame_data_.cycle(); }
 
 void geos::scene::end_frame() { }
 
-void geos::scene::update(camera const& camera)
+void geos::scene::update(camera const& camera, glm::fvec3 const& translate)
 {
     {
         static auto start_time{std::chrono::high_resolution_clock::now()};
@@ -221,9 +221,8 @@ void geos::scene::update(camera const& camera)
             vertex_uniform_buffer_.memory,
             frame_data_.top().uniform_buffer_region_)};
 
-        *uniform_map.as<transform>() = {.model = glm::rotate(glm::mat4(1.0f),
-                                            time * glm::radians(90.0f),
-                                            glm::fvec3(0.0f, 0.0f, 1.0f)),
+        *uniform_map.as<transform>() = {
+            .model = glm::translate(glm::fmat4{1.0f}, translate),
             .view = camera.view_matrix(),
             .projection = camera.projection_matrix()};
 
