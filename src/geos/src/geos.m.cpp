@@ -60,6 +60,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     geos::application application;
 
+    application.attach_window(&window);
+
     auto context{vkrndr::create_context(&window, enable_validation_layers)};
     auto device{vkrndr::create_device(context)};
     {

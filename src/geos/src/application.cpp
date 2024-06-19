@@ -1,6 +1,7 @@
 #include <application.hpp>
 
 #include <camera.hpp>
+#include <glm/ext/matrix_projection.hpp>
 #include <mesh.hpp>
 #include <physics.hpp>
 #include <scene.hpp>
@@ -8,15 +9,20 @@
 #include <cppext_numeric.hpp>
 
 #include <gltf_manager.hpp>
+#include <sdl_window.hpp>
 #include <vulkan_buffer.hpp>
 #include <vulkan_memory.hpp>
 #include <vulkan_renderer.hpp>
 #include <vulkan_utility.hpp>
 
+#include <fmt/format.h>
+
 #include <glm/fwd.hpp>
 
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
+
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 #include <SDL_events.h>
 #include <SDL_video.h>
@@ -50,6 +56,70 @@ void geos::application::handle_event(SDL_Event const& event)
         {
             camera_.resize(cppext::narrow<uint32_t>(window.data1),
                 cppext::narrow<uint32_t>(window.data2));
+        }
+    }
+    else if (event.type == SDL_MOUSEMOTION)
+    {
+        auto const& motion{event.motion};
+        fmt::println("mouse {} {}", motion.x, motion.y);
+
+        if (!window_)
+        {
+            return;
+        }
+
+        int width; // NOLINT
+        int height; // NOLINT
+        SDL_GetWindowSize(window_->native_handle(), &width, &height);
+
+        glm::fvec3 window{cppext::as_fp(motion.x),
+            cppext::as_fp(height - motion.y),
+            0};
+        fmt::println("window {} {}", window.x, window.y);
+
+        glm::fvec4 viewport{0, 0, width, height};
+        fmt::println("viewport {} {} {} {}",
+            viewport.x,
+            viewport.y,
+            viewport.z,
+            viewport.w);
+
+        auto near{glm::unProjectZO(glm::fvec3(window.x, window.y, 0),
+            camera_.view_matrix(),
+            camera_.projection_matrix(),
+            viewport)};
+        fmt::println("near {} {} {}", near.x, near.y, near.z);
+
+        auto far{glm::unProjectZO(glm::fvec3(window.x, window.y, 1),
+            camera_.view_matrix(),
+            camera_.projection_matrix(),
+            viewport)};
+        fmt::println("far {} {} {}", far.x, far.y, far.z);
+
+        auto direction{far - near};
+        fmt::println("direction {} {} {}",
+            direction.x,
+            direction.y,
+            direction.z);
+
+        auto normalized{glm::normalize(direction)};
+        fmt::println("normalized {} {} {}",
+            normalized.x,
+            normalized.y,
+            normalized.z);
+
+        btVector3 from{near.x, near.y, near.z};
+        btVector3 to{far.x, far.y, far.z};
+        btCollisionWorld::ClosestRayResultCallback rayCallback(from, to);
+        physics_simulation_.world()->rayTest(from, to, rayCallback);
+        if (rayCallback.hasHit())
+        {
+            btVector3 p = from.lerp(to, rayCallback.m_closestHitFraction);
+            fmt::println("hit {} {} {} {}",
+                p.x(),
+                p.y(),
+                p.z(),
+                (intptr_t) rayCallback.m_collisionObject->getUserIndex());
         }
     }
 }

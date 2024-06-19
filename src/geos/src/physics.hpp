@@ -33,6 +33,8 @@ namespace geos
 
         void update(float delta_time);
 
+        [[nodiscard]] btDiscreteDynamicsWorld* world() { return world_.get(); }
+
     public:
         physics_simulation& operator=(physics_simulation const&) = delete;
 

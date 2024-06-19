@@ -51,6 +51,7 @@ geos::physics_simulation::physics_simulation()
             ground_shape,
             local_inertia};
         btRigidBody* const body{new btRigidBody{rigid_body_info}};
+        body->setUserIndex(1);
         // NOLINTEND(cppcoreguidelines-owning-memory)
 
         // add the body to the dynamics world
@@ -104,6 +105,7 @@ btRigidBody* geos::physics_simulation::add_rigid_body()
         collision_shape,
         local_inertia};
     btRigidBody* const body{new btRigidBody{rigid_body_info}};
+    body->setUserIndex(2);
     // NOLINTEND(cppcoreguidelines-owning-memory)
 
     // add the body to the dynamics world
