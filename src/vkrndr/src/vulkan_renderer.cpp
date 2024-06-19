@@ -17,6 +17,7 @@
 #include <vulkan_utility.hpp>
 #include <vulkan_window.hpp>
 
+#include <cppext_cyclic_stack.hpp>
 #include <cppext_numeric.hpp>
 
 #include <stb_image.h>
@@ -27,6 +28,7 @@
 #include <span>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 // IWYU pragma: no_include <functional>
 // IWYU pragma: no_include <unordered_map>

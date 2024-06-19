@@ -26,8 +26,8 @@ namespace geos
     struct [[nodiscard]] gpu_mesh final
     {
         vkrndr::vulkan_buffer vert_index_buffer;
-        VkDeviceSize vertex_offset;
-        VkDeviceSize index_offset;
+        VkDeviceSize vertex_offset{};
+        VkDeviceSize index_offset{};
         std::vector<buffer_part> submeshes;
     };
 

@@ -13,24 +13,20 @@
 #include <vulkan_renderer.hpp>
 #include <vulkan_utility.hpp>
 
+#include <cppext_cyclic_stack.hpp>
 #include <cppext_numeric.hpp>
-#include <cppext_pragma_warning.hpp>
 
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
-#include <glm/trigonometric.hpp>
-#include <glm/vec3.hpp>
 
 #include <vulkan/vulkan_core.h>
 
-#include <algorithm>
 #include <array>
-#include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <ranges>
 #include <span>
+#include <vector>
 
 // IWYU pragma: no_include <filesystem>
 
@@ -210,13 +206,6 @@ void geos::scene::end_frame() { }
 void geos::scene::update(camera const& camera, glm::fvec3 const& translate)
 {
     {
-        static auto start_time{std::chrono::high_resolution_clock::now()};
-        auto const current_time{std::chrono::high_resolution_clock::now()};
-        float const time{
-            std::chrono::duration<float, std::chrono::seconds::period>(
-                current_time - start_time)
-                .count()};
-
         vkrndr::mapped_memory uniform_map{vkrndr::map_memory(vulkan_device_,
             vertex_uniform_buffer_.memory,
             frame_data_.top().uniform_buffer_region_)};

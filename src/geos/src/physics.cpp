@@ -1,6 +1,19 @@
 #include <physics.hpp>
 
-#include <cstdio>
+#include <BulletCollision/BroadphaseCollision/btBroadphaseInterface.h>
+#include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
+#include <BulletCollision/CollisionDispatch/btCollisionDispatcher.h>
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
+#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btAlignedAllocator.h>
+#include <LinearMath/btDefaultMotionState.h>
+#include <LinearMath/btMotionState.h>
+#include <LinearMath/btVector3.h>
 
 geos::physics_simulation::physics_simulation()
     : collision_configuration_{std::make_unique<
@@ -18,34 +31,27 @@ geos::physics_simulation::physics_simulation()
 
     // TODO: TEMPORARY
     {
-        btCollisionShape* groundShape = new btBoxShape(
-            btVector3(btScalar(50.), btScalar(50.), btScalar(50.)));
+        btCollisionShape* ground_shape{new btBoxShape{
+            btVector3{btScalar{50.0f}, btScalar{50.0f}, btScalar{50.0f}}}};
+        collision_shapes_.push_back(ground_shape);
 
-        collision_shapes_.push_back(groundShape);
+        btTransform ground_transform;
+        ground_transform.setIdentity();
+        ground_transform.setOrigin(btVector3{0, -56, 0});
 
-        btTransform groundTransform;
-        groundTransform.setIdentity();
-        groundTransform.setOrigin(btVector3(0, -56, 0));
+        btScalar const mass{0.0f};
 
-        btScalar mass(0.);
+        btVector3 local_inertia{0, 0, 0};
 
-        // rigidbody is dynamic if and only if mass is non zero, otherwise
-        // static
-        bool isDynamic = (mass != 0.f);
-
-        btVector3 localInertia(0, 0, 0);
-        if (isDynamic)
-            groundShape->calculateLocalInertia(mass, localInertia);
-
-        // using motionstate is optional, it provides interpolation
-        // capabilities, and only synchronizes 'active' objects
-        btDefaultMotionState* myMotionState =
-            new btDefaultMotionState(groundTransform);
-        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,
-            myMotionState,
-            groundShape,
-            localInertia);
-        btRigidBody* body = new btRigidBody(rbInfo);
+        // NOLINTBEGIN(cppcoreguidelines-owning-memory)
+        btDefaultMotionState* const motion_state{
+            new btDefaultMotionState{ground_transform}};
+        btRigidBody::btRigidBodyConstructionInfo const rigid_body_info{mass,
+            motion_state,
+            ground_shape,
+            local_inertia};
+        btRigidBody* const body{new btRigidBody{rigid_body_info}};
+        // NOLINTEND(cppcoreguidelines-owning-memory)
 
         // add the body to the dynamics world
         world_->addRigidBody(body);
@@ -55,10 +61,10 @@ geos::physics_simulation::physics_simulation()
 geos::physics_simulation::~physics_simulation()
 {
     // remove the rigidbodies from the dynamics world and delete them
-    for (int i = world_->getNumCollisionObjects() - 1; i >= 0; i--)
+    for (int i{world_->getNumCollisionObjects() - 1}; i >= 0; --i)
     {
-        btCollisionObject* obj = world_->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
+        btCollisionObject* obj{world_->getCollisionObjectArray()[i]};
+        btRigidBody* body{btRigidBody::upcast(obj)};
         if (body && body->getMotionState())
         {
             delete body->getMotionState();
@@ -68,9 +74,9 @@ geos::physics_simulation::~physics_simulation()
     }
 
     // delete collision shapes
-    for (int j = 0; j < collision_shapes_.size(); j++)
+    for (int j{}; j < collision_shapes_.size(); ++j)
     {
-        btCollisionShape* shape = collision_shapes_[j];
+        btCollisionShape* shape{collision_shapes_[j]};
         collision_shapes_[j] = 0;
         delete shape;
     }
@@ -78,42 +84,35 @@ geos::physics_simulation::~physics_simulation()
 
 btRigidBody* geos::physics_simulation::add_rigid_body()
 {
-    // create a dynamic rigidbody
-    btCollisionShape* colShape = new btBoxShape(btVector3(1, 1, 1));
-    collision_shapes_.push_back(colShape);
+    btCollisionShape* collision_shape{new btBoxShape{btVector3{1, 1, 1}}};
+    collision_shapes_.push_back(collision_shape);
 
-    /// Create Dynamic Objects
-    btTransform startTransform;
-    startTransform.setIdentity();
+    btScalar const mass{1.0f};
 
-    btScalar mass(1.f);
+    btVector3 local_inertia{0, 0, 0};
+    collision_shape->calculateLocalInertia(mass, local_inertia);
 
-    // rigidbody is dynamic if and only if mass is non zero, otherwise
-    // static
-    bool isDynamic = (mass != 0.f);
+    btTransform start_transform;
+    start_transform.setIdentity();
+    start_transform.setOrigin(btVector3{2, 10, 0});
 
-    btVector3 localInertia(0, 0, 0);
-    if (isDynamic)
-        colShape->calculateLocalInertia(mass, localInertia);
+    // NOLINTBEGIN(cppcoreguidelines-owning-memory)
+    btDefaultMotionState* const motion_state{
+        new btDefaultMotionState{start_transform}};
+    btRigidBody::btRigidBodyConstructionInfo const rigid_body_info{mass,
+        motion_state,
+        collision_shape,
+        local_inertia};
+    btRigidBody* const body{new btRigidBody{rigid_body_info}};
+    // NOLINTEND(cppcoreguidelines-owning-memory)
 
-    startTransform.setOrigin(btVector3(2, 10, 0));
-
-    // using motionstate is recommended, it provides interpolation
-    // capabilities, and only synchronizes 'active' objects
-    btDefaultMotionState* myMotionState =
-        new btDefaultMotionState(startTransform);
-    btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,
-        myMotionState,
-        colShape,
-        localInertia);
-    btRigidBody* body = new btRigidBody(rbInfo);
-
+    // add the body to the dynamics world
     world_->addRigidBody(body);
 
     return body;
 }
 
-void geos::physics_simulation::update(float delta_time)
+void geos::physics_simulation::update(float const delta_time)
 {
     world_->stepSimulation(delta_time, 10);
 }

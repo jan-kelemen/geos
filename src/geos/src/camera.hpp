@@ -5,6 +5,8 @@
 #include <glm/mat4x4.hpp> // IWYU pragma: keep
 #include <glm/vec3.hpp> // IWYU pragma: keep
 
+#include <cstdint>
+
 namespace geos
 {
     class [[nodiscard]] camera final

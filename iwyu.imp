@@ -70,4 +70,7 @@
 
   # freetype aliases
   { "include": ["@<freetype/.*>", private, "<ft2build.h>", public] },
+
+  # EnTT aliases
+  { "include": ["@<entt/.*>", private, "<entt/entt.hpp>", public] },
 ]

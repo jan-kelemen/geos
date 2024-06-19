@@ -5,9 +5,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include <cstdint>
-#include <vector>
-
 namespace vkrndr
 {
     class vulkan_window;

@@ -14,7 +14,6 @@
 #include <filesystem>
 #include <memory>
 #include <span>
-#include <vector>
 
 namespace vkrndr
 {

@@ -65,3 +65,8 @@ set_property(TARGET geos
         VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/physics.cpp 
+    PROPERTIES
+        SKIP_LINTING ON
+)

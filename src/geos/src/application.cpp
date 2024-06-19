@@ -1,13 +1,34 @@
 #include <application.hpp>
 
+#include <camera.hpp>
 #include <mesh.hpp>
+#include <physics.hpp>
+#include <scene.hpp>
 
 #include <cppext_numeric.hpp>
 
 #include <gltf_manager.hpp>
 #include <vulkan_buffer.hpp>
+#include <vulkan_memory.hpp>
 #include <vulkan_renderer.hpp>
 #include <vulkan_utility.hpp>
+
+#include <glm/fwd.hpp>
+
+#include <LinearMath/btTransform.h>
+#include <LinearMath/btVector3.h>
+
+#include <SDL_events.h>
+#include <SDL_video.h>
+
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <optional>
+#include <vector>
+
+// IWYU pragma: no_include <filesystem>
 
 geos::application::application()
     : camera_{glm::fvec3{10.0f, 10.0f, 10.0f},
@@ -18,8 +39,6 @@ geos::application::application()
           100.f}
 {
 }
-
-geos::application::~application() { }
 
 void geos::application::handle_event(SDL_Event const& event)
 {

@@ -8,6 +8,8 @@
 #include <vulkan_utility.hpp>
 #include <vulkan_window.hpp>
 
+#include <cppext_cyclic_stack.hpp>
+
 #include <imgui.h>
 #include <imgui_impl_sdl2.h>
 #include <imgui_impl_vulkan.h>

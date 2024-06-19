@@ -1,6 +1,8 @@
 #ifndef CPPEXT_CYCLIC_STACK_INCLUDED
 #define CPPEXT_CYCLIC_STACK_INCLUDED
 
+#include <cppext_numeric.hpp>
+
 #include <algorithm>
 #include <span>
 #include <vector>
@@ -20,7 +22,7 @@ namespace cppext
     public:
         cyclic_stack() = default;
 
-        cyclic_stack(size_type cycle, size_type size = {});
+        explicit cyclic_stack(size_type cycle, size_type size = {});
 
         cyclic_stack(cyclic_stack const&) = default;
 
@@ -49,15 +51,16 @@ namespace cppext
 
         void pop();
 
-        void swap(cyclic_stack& other);
+        void swap(cyclic_stack& other) noexcept;
 
-        T* data();
+        [[nodiscard]] T* data();
 
-        T const* data() const;
+        [[nodiscard]] T const* data() const;
 
-        std::span<T> as_span();
+        // cppcheck-suppress functionConst
+        [[nodiscard]] std::span<T> as_span();
 
-        std::span<T const> as_span() const;
+        [[nodiscard]] std::span<T const> as_span() const;
 
     public:
         cyclic_stack& operator=(cyclic_stack const&) = default;
@@ -131,12 +134,13 @@ namespace cppext
     template<typename T, typename Container>
     void cyclic_stack<T, Container>::pop()
     {
-        auto const current_it{std::next(begin(data_), index_)};
+        auto const current_it{std::next(begin(data_),
+            cppext::narrow<typename Container::difference_type>(index_))};
         std::move(std::next(current_it, 1), end(data_), current_it);
     }
 
     template<typename T, typename Container>
-    void cyclic_stack<T, Container>::swap(cyclic_stack& other)
+    void cyclic_stack<T, Container>::swap(cyclic_stack& other) noexcept
     {
         using std::swap;
         swap(data_, other.data_);

@@ -124,7 +124,7 @@ namespace vkrndr
 
     private: // Data
         vulkan_device* device_{};
-        std::shared_ptr<VkPipelineLayout> pipeline_layout_{};
+        std::shared_ptr<VkPipelineLayout> pipeline_layout_;
         VkFormat image_format_{};
         std::vector<
             std::tuple<VkShaderStageFlagBits, VkShaderModule, std::string>>

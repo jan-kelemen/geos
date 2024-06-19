@@ -1,10 +1,18 @@
 #ifndef GEOS_PHYSICS_INCLUDED
 #define GEOS_PHYSICS_INCLUDED
 
-#include <btBulletDynamicsCommon.h>
+#include <LinearMath/btAlignedObjectArray.h>
+#include <LinearMath/btTransform.h>
 
 #include <memory>
-#include <vector>
+
+class btBroadphaseInterface;
+class btCollisionDispatcher;
+class btCollisionShape;
+class btDefaultCollisionConfiguration;
+class btDiscreteDynamicsWorld;
+class btRigidBody;
+class btSequentialImpulseConstraintSolver;
 
 namespace geos
 {

@@ -14,6 +14,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include <cstdint>
 #include <cstdlib>
 
 // IWYU pragma: no_include <fmt/core.h>

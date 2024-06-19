@@ -6,16 +6,13 @@
 #include <vulkan_buffer.hpp>
 #include <vulkan_image.hpp>
 #include <vulkan_memory.hpp>
-#include <vulkan_scene.hpp>
 
 #include <glm/fwd.hpp>
 #include <glm/vec3.hpp> // IWYU pragma: keep
 
 #include <vulkan/vulkan_core.h>
 
-#include <cstdint>
 #include <memory>
-#include <vector>
 
 namespace vkrndr
 {

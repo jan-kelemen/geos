@@ -11,13 +11,13 @@
 
 #include <SDL2/SDL_events.h>
 
-#include <memory>
+#include <vulkan/vulkan_core.h>
 
 namespace vkrndr
 {
     struct vulkan_device;
+    struct vulkan_image;
     class vulkan_renderer;
-    class vulkan_scene;
 } // namespace vkrndr
 
 namespace geos
@@ -32,7 +32,7 @@ namespace geos
         application(application&&) noexcept = delete;
 
     public:
-        ~application() override;
+        ~application() override = default;
 
     public:
         void handle_event(SDL_Event const& event);

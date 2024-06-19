@@ -5,6 +5,7 @@
 
 #include <vulkan_utility.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <vector>
