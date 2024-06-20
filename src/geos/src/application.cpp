@@ -84,16 +84,7 @@ void geos::application::update(float const delta_time)
 
     camera_.update();
 
-    for (auto entity : registry_.view<physics_component>())
-    {
-        btTransform const transform{
-            registry_.get<physics_component>(entity).position()};
-
-        glm::fmat4x4 gpu_transform;
-        transform.getOpenGLMatrix(glm::value_ptr(gpu_transform));
-
-        scene_.update(camera_, gpu_transform);
-    }
+    scene_.update(camera_);
 }
 
 void geos::application::attach_renderer(vkrndr::vulkan_device* const device,
@@ -133,9 +124,21 @@ void geos::application::resize(VkExtent2D extent)
 
 void geos::application::draw(VkCommandBuffer command_buffer, VkExtent2D extent)
 {
-    for (auto entity : registry_.view<mesh_component>())
+    glm::fmat4x4 gpu_transform;
+    for (auto entity : registry_.view<physics_component, mesh_component>())
     {
+        btTransform const transform{
+            registry_.get<physics_component>(entity).position()};
+        transform.getOpenGLMatrix(glm::value_ptr(gpu_transform));
+
         scene_.draw(registry_.get<mesh_component>(entity).mesh,
+            gpu_transform,
+            command_buffer,
+            extent);
+
+        gpu_transform = glm::translate(gpu_transform, glm::fvec3{-2, 0, 0});
+        scene_.draw(registry_.get<mesh_component>(entity).mesh,
+            gpu_transform,
             command_buffer,
             extent);
     }

@@ -52,7 +52,7 @@ namespace geos
 
         void end_frame();
 
-        void update(camera const& camera, glm::fmat4x4 const& model);
+        void update(camera const& camera);
 
     public:
         [[nodiscard]] VkClearValue clear_color();
@@ -64,6 +64,7 @@ namespace geos
         void resize(VkExtent2D extent);
 
         void draw(gpu_mesh const& mesh,
+            glm::fmat4 const& model,
             VkCommandBuffer command_buffer,
             VkExtent2D extent);
 
@@ -77,6 +78,8 @@ namespace geos
         {
             VkDescriptorSet descriptor_set_{VK_NULL_HANDLE};
             vkrndr::memory_region uniform_buffer_region_;
+            vkrndr::memory_region storage_buffer_region_;
+            uint32_t storage_buffer_index_{};
         };
 
     private: // Data
@@ -84,6 +87,7 @@ namespace geos
         vkrndr::vulkan_renderer* vulkan_renderer_{};
 
         vkrndr::vulkan_buffer vertex_uniform_buffer_;
+        vkrndr::vulkan_buffer vertex_storage_buffer_;
         vkrndr::vulkan_image depth_buffer_;
 
         VkDescriptorSetLayout descriptor_set_layout_{VK_NULL_HANDLE};
