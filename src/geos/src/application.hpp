@@ -13,12 +13,13 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include <cstdint>
+
 namespace vkrndr
 {
     struct vulkan_device;
     struct vulkan_image;
     class vulkan_renderer;
-    class sdl_window;
 } // namespace vkrndr
 
 namespace geos
@@ -26,7 +27,7 @@ namespace geos
     class [[nodiscard]] application final : public vkrndr::vulkan_scene
     {
     public:
-        application();
+        application(uint32_t width_, uint32_t height_);
 
         application(application const&) = delete;
 
@@ -51,8 +52,6 @@ namespace geos
         void detach_renderer(vkrndr::vulkan_device* device,
             vkrndr::vulkan_renderer* renderer);
 
-        void attach_window(vkrndr::sdl_window* window) { window_ = window; }
-
     public: // vulkan_scene overrides
         [[nodiscard]] VkClearValue clear_color() override;
 
@@ -76,8 +75,6 @@ namespace geos
             vkrndr::vulkan_renderer* renderer);
 
     private:
-        vkrndr::sdl_window* window_{nullptr};
-
         entt::registry registry_;
 
         physics_simulation physics_simulation_;

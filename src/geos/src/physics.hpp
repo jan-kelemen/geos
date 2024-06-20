@@ -8,6 +8,7 @@
 
 class btBroadphaseInterface;
 class btCollisionDispatcher;
+class btCollisionObject;
 class btCollisionShape;
 class btDefaultCollisionConfiguration;
 class btDiscreteDynamicsWorld;
@@ -33,7 +34,8 @@ namespace geos
 
         void update(float delta_time);
 
-        [[nodiscard]] btDiscreteDynamicsWorld* world() { return world_.get(); }
+        [[nodiscard]] btCollisionObject const* raycast(btVector3 const& from,
+            btVector3 const& to);
 
     public:
         physics_simulation& operator=(physics_simulation const&) = delete;

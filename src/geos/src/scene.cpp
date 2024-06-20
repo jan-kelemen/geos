@@ -203,15 +203,14 @@ void geos::scene::begin_frame() { frame_data_.cycle(); }
 
 void geos::scene::end_frame() { }
 
-void geos::scene::update(camera const& camera, glm::fvec3 const& translate)
+void geos::scene::update(camera const& camera, glm::fmat4x4 const& model)
 {
     {
         vkrndr::mapped_memory uniform_map{vkrndr::map_memory(vulkan_device_,
             vertex_uniform_buffer_.memory,
             frame_data_.top().uniform_buffer_region_)};
 
-        *uniform_map.as<transform>() = {
-            .model = glm::translate(glm::fmat4{1.0f}, translate),
+        *uniform_map.as<transform>() = {.model = model,
             .view = camera.view_matrix(),
             .projection = camera.projection_matrix()};
 

@@ -11,6 +11,8 @@
 
 geos::camera::camera(glm::fvec3 const& eye,
     glm::fvec3 const& center,
+    uint32_t const width,
+    uint32_t const height,
     float const fov,
     float const aspect_ratio,
     float const near_plane,
@@ -18,6 +20,8 @@ geos::camera::camera(glm::fvec3 const& eye,
     : eye_{eye}
     , center_{center}
     , up_direction_{0.0f, -1.0f, 0.0f}
+    , width_{width}
+    , height_{height}
     , fov_{fov}
     , aspect_ratio_{aspect_ratio}
     , near_plane_{near_plane}
@@ -35,8 +39,33 @@ void geos::camera::update()
     view_projection_matrix_ = calculate_view_projection_matrix();
 }
 
+std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast(
+    uint32_t const x_position,
+    uint32_t const y_position) const
+{
+    glm::fvec3 const window{cppext::as_fp(x_position),
+        cppext::as_fp(height_ - y_position),
+        0};
+
+    glm::fvec4 const viewport{0, 0, width_, height_};
+
+    auto const near{glm::unProjectZO(glm::fvec3{window.x, window.y, 0},
+        view_matrix_,
+        projection_matrix_,
+        viewport)};
+
+    auto const far{glm::unProjectZO(glm::fvec3{window.x, window.y, 1},
+        view_matrix_,
+        projection_matrix_,
+        viewport)};
+
+    return std::make_pair(near, far);
+}
+
 void geos::camera::resize(uint32_t width, uint32_t height)
 {
+    width_ = width;
+    height_ = height;
     aspect_ratio_ = cppext::as_fp(width) / cppext::as_fp(height);
 }
 

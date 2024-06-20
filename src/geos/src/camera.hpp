@@ -14,6 +14,8 @@ namespace geos
     public:
         camera(glm::fvec3 const& eye,
             glm::fvec3 const& center,
+            uint32_t width,
+            uint32_t height,
             float fov,
             float aspect_ratio,
             float near_plane,
@@ -46,6 +48,9 @@ namespace geos
     public:
         void update();
 
+        [[nodiscard]] std::pair<glm::fvec3, glm::fvec3>
+        raycast(uint32_t x_position, uint32_t y_position) const;
+
         void resize(uint32_t width, uint32_t height);
 
         void debug();
@@ -66,6 +71,9 @@ namespace geos
         glm::fvec3 eye_;
         glm::fvec3 center_;
         glm::fvec3 up_direction_;
+
+        uint32_t width_;
+        uint32_t height_;
 
         float fov_;
         float aspect_ratio_;

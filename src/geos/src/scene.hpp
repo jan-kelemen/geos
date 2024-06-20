@@ -52,7 +52,7 @@ namespace geos
 
         void end_frame();
 
-        void update(camera const& camera, glm::fvec3 const& translate);
+        void update(camera const& camera, glm::fmat4x4 const& model);
 
     public:
         [[nodiscard]] VkClearValue clear_color();

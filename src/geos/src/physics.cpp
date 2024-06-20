@@ -119,6 +119,19 @@ void geos::physics_simulation::update(float const delta_time)
     world_->stepSimulation(delta_time, 10);
 }
 
+btCollisionObject const*
+geos::physics_simulation::raycast(btVector3 const& from, btVector3 const& to)
+{
+    btCollisionWorld::ClosestRayResultCallback callback{from, to};
+    world_->rayTest(from, to, callback);
+    if (callback.hasHit())
+    {
+        return callback.m_collisionObject;
+    }
+
+    return nullptr;
+}
+
 btTransform geos::physics_component::position() const
 {
     btTransform rv;
