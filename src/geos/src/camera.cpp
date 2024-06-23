@@ -44,7 +44,7 @@ std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast(
     uint32_t const y_position) const
 {
     glm::fvec3 const window{cppext::as_fp(x_position),
-        cppext::as_fp(height_ - y_position),
+        cppext::as_fp(y_position),
         0};
 
     glm::fvec4 const viewport{0, 0, width_, height_};
