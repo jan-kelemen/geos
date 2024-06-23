@@ -19,10 +19,10 @@
 #include <glm/fwd.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
-
-#include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 
 #include <SDL_events.h>
 #include <SDL_video.h>
@@ -32,6 +32,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <random>
 #include <vector>
 
 // IWYU pragma: no_include <filesystem>
@@ -91,6 +92,7 @@ void geos::application::attach_renderer(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* const renderer)
 {
     load_meshes(device, renderer);
+    load_meshes(device, renderer);
     scene_.attach_renderer(device, renderer);
 }
 
@@ -131,12 +133,6 @@ void geos::application::draw(VkCommandBuffer command_buffer, VkExtent2D extent)
             registry_.get<physics_component>(entity).position()};
         transform.getOpenGLMatrix(glm::value_ptr(gpu_transform));
 
-        scene_.draw(registry_.get<mesh_component>(entity).mesh,
-            gpu_transform,
-            command_buffer,
-            extent);
-
-        gpu_transform = glm::translate(gpu_transform, glm::fvec3{-2, 0, 0});
         scene_.draw(registry_.get<mesh_component>(entity).mesh,
             gpu_transform,
             command_buffer,
@@ -207,6 +203,19 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     registry_.emplace<mesh_component>(cube_entity, mesh);
 
-    registry_.emplace<physics_component>(cube_entity,
-        physics_simulation_.add_rigid_body());
+    static std::mt19937 generator{std::random_device{}()};
+    static int entity_count{1};
+
+    auto const& phyisics_component{registry_.emplace<physics_component>(
+        cube_entity,
+        physics_simulation_.add_rigid_body(
+            std::make_unique<btBoxShape>(btVector3{1, 1, 1}),
+            1.0f,
+            btVector3{cppext::as_fp(
+                          std::uniform_int_distribution<int>(-5, 5)(generator)),
+                10,
+                cppext::as_fp(
+                    std::uniform_int_distribution<int>(-5, 5)(generator))}))};
+
+    phyisics_component.rigid_body_->setUserIndex(++entity_count);
 }

@@ -30,7 +30,9 @@ namespace geos
         ~physics_simulation();
 
     public:
-        btRigidBody* add_rigid_body();
+        btRigidBody* add_rigid_body(std::unique_ptr<btCollisionShape> shape,
+            float mass,
+            btVector3 const& origin);
 
         void update(float delta_time);
 

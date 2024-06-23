@@ -83,12 +83,12 @@ void geos::camera::debug()
 
 glm::fmat4 geos::camera::calculate_view_matrix() const
 {
-    return glm::lookAt(eye_, center_, up_direction_);
+    return glm::lookAtRH(eye_, center_, up_direction_);
 }
 
 glm::fmat4 geos::camera::calculate_projection_matrix() const
 {
-    return glm::perspective(glm::radians(fov_),
+    return glm::perspectiveRH_ZO(glm::radians(fov_),
         aspect_ratio_,
         near_plane_,
         far_plane_);

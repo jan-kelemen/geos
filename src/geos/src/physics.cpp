@@ -83,26 +83,28 @@ geos::physics_simulation::~physics_simulation()
     }
 }
 
-btRigidBody* geos::physics_simulation::add_rigid_body()
+btRigidBody* geos::physics_simulation::add_rigid_body(
+    std::unique_ptr<btCollisionShape> shape,
+    float const mass,
+    btVector3 const& origin)
 {
-    btCollisionShape* collision_shape{new btBoxShape{btVector3{1, 1, 1}}};
-    collision_shapes_.push_back(collision_shape);
-
-    btScalar const mass{1.0f};
-
     btVector3 local_inertia{0, 0, 0};
-    collision_shape->calculateLocalInertia(mass, local_inertia);
+    if (mass != 0.0f)
+    {
+        shape->calculateLocalInertia(mass, local_inertia);
+    }
+    collision_shapes_.push_back(shape.release());
 
     btTransform start_transform;
     start_transform.setIdentity();
-    start_transform.setOrigin(btVector3{2, 10, 0});
+    start_transform.setOrigin(origin);
 
     // NOLINTBEGIN(cppcoreguidelines-owning-memory)
     btDefaultMotionState* const motion_state{
         new btDefaultMotionState{start_transform}};
     btRigidBody::btRigidBodyConstructionInfo const rigid_body_info{mass,
         motion_state,
-        collision_shape,
+        collision_shapes_[collision_shapes_.size() - 1],
         local_inertia};
     btRigidBody* const body{new btRigidBody{rigid_body_info}};
     body->setUserIndex(2);
