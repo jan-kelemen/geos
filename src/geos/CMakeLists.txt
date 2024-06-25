@@ -36,7 +36,7 @@ target_link_libraries(geos
         project-options
 )
 
-add_dependencies(geos shaders)
+add_dependencies(geos assets shaders)
 
 add_custom_target(shaders
     DEPENDS

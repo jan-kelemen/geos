@@ -17,7 +17,6 @@
 #include <cppext_numeric.hpp>
 
 #include <glm/fwd.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
 
 #include <vulkan/vulkan_core.h>

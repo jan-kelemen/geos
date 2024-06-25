@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp> // IWYU pragma: keep
 
 #include <cstdint>
+#include <utility>
 
 namespace geos
 {

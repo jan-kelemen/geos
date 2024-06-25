@@ -52,6 +52,7 @@ endif()
 
 include(${PROJECT_SOURCE_DIR}/cmake/glslc.cmake)
 
+add_subdirectory(assets)
 add_subdirectory(src)
 add_subdirectory(vendor)
 

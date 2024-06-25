@@ -12,6 +12,7 @@
 
 #include <vulkan/vulkan_core.h>
 
+#include <cstdint>
 #include <memory>
 
 namespace vkrndr

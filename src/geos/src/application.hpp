@@ -27,7 +27,7 @@ namespace geos
     class [[nodiscard]] application final : public vkrndr::vulkan_scene
     {
     public:
-        application(uint32_t width_, uint32_t height_);
+        application(uint32_t width, uint32_t height);
 
         application(application const&) = delete;
 

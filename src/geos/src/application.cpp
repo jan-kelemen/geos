@@ -1,7 +1,6 @@
 #include <application.hpp>
 
 #include <camera.hpp>
-#include <glm/ext/matrix_projection.hpp>
 #include <mesh.hpp>
 #include <physics.hpp>
 #include <scene.hpp>
@@ -14,15 +13,18 @@
 #include <vulkan_renderer.hpp>
 #include <vulkan_utility.hpp>
 
-#include <fmt/format.h>
-
-#include <glm/fwd.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
+
+#include <fmt/core.h>
+
+#include <glm/fwd.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/vec3.hpp>
 
 #include <SDL_events.h>
 #include <SDL_video.h>
@@ -64,7 +66,9 @@ void geos::application::handle_event(SDL_Event const& event)
     else if (event.type == SDL_MOUSEMOTION)
     {
         auto const& motion{event.motion};
-        auto const& [near, far] = camera_.raycast(motion.x, motion.y);
+        auto const& [near, far] =
+            camera_.raycast(cppext::narrow<uint32_t>(motion.x),
+                cppext::narrow<uint32_t>(motion.y));
         auto const* const hit{
             physics_simulation_.raycast({near.x, near.y, near.z},
                 {far.x, far.y, far.z})};
