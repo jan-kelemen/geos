@@ -14,13 +14,14 @@ namespace geos
     {
     public:
         camera(glm::fvec3 const& eye,
-            glm::fvec3 const& center,
             uint32_t width,
             uint32_t height,
             float fov,
             float aspect_ratio,
             float near_plane,
-            float far_plane);
+            float far_plane,
+            float yaw,
+            float pitch);
 
         camera(camera const&) = default;
 
@@ -49,6 +50,10 @@ namespace geos
     public:
         void update();
 
+        void mouse_movement(float relative_x, float relative_y);
+
+        [[nodiscard]] std::pair<glm::fvec3, glm::fvec3> raycast_center() const;
+
         [[nodiscard]] std::pair<glm::fvec3, glm::fvec3>
         raycast(uint32_t x_position, uint32_t y_position) const;
 
@@ -70,8 +75,10 @@ namespace geos
 
     private:
         glm::fvec3 eye_;
-        glm::fvec3 center_;
-        glm::fvec3 up_direction_;
+
+        glm::fvec3 right_;
+        glm::fvec3 front_;
+        glm::fvec3 up_;
 
         uint32_t width_;
         uint32_t height_;
@@ -80,6 +87,9 @@ namespace geos
         float aspect_ratio_;
         float near_plane_;
         float far_plane_;
+
+        float yaw_;
+        float pitch_;
 
         glm::fmat4 view_matrix_;
         glm::fmat4 projection_matrix_;

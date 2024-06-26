@@ -9,34 +9,58 @@
 
 #include <imgui.h>
 
+#include <fmt/format.h>
+
 geos::camera::camera(glm::fvec3 const& eye,
-    glm::fvec3 const& center,
     uint32_t const width,
     uint32_t const height,
     float const fov,
     float const aspect_ratio,
     float const near_plane,
-    float const far_plane)
+    float const far_plane,
+    float const yaw,
+    float const pitch)
     : eye_{eye}
-    , center_{center}
-    , up_direction_{0.0f, -1.0f, 0.0f}
     , width_{width}
     , height_{height}
     , fov_{fov}
     , aspect_ratio_{aspect_ratio}
     , near_plane_{near_plane}
     , far_plane_{far_plane}
-    , view_matrix_{calculate_view_matrix()}
-    , projection_matrix_{calculate_projection_matrix()}
-    , view_projection_matrix_{calculate_view_projection_matrix()}
+    , yaw_{yaw}
+    , pitch_{pitch}
 {
+    update();
 }
 
 void geos::camera::update()
 {
+    constexpr glm::fvec3 world_up{0.0f, -1.0f, 0.0f};
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+    front.y = sin(glm::radians(pitch_));
+    front.z = sin(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+    front_ = glm::normalize(front);
+
+    right_ = glm::normalize(glm::cross(front_, world_up));
+    up_ = glm::normalize(glm::cross(right_, front_));
+
     view_matrix_ = calculate_view_matrix();
     projection_matrix_ = calculate_projection_matrix();
     view_projection_matrix_ = calculate_view_projection_matrix();
+}
+
+void geos::camera::mouse_movement(float const relative_x,
+    float const relative_y)
+{
+    yaw_ += relative_x;
+    pitch_ += relative_y;
+}
+
+std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast_center() const
+{
+    return raycast(width_ / 2, height_ / 2);
 }
 
 std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast(
@@ -73,7 +97,6 @@ void geos::camera::debug()
 {
     ImGui::Begin("Camera");
     ImGui::SliderFloat3("Eye", glm::value_ptr(eye_), -10.f, 10.f);
-    ImGui::SliderFloat3("Center", glm::value_ptr(center_), -10.f, 10.f);
     ImGui::SliderFloat("FOV", &fov_, 0.0f, 360.0f);
     ImGui::SliderFloat("Aspect ratio", &aspect_ratio_, 0.0f, 2.0f);
     ImGui::SliderFloat("Near plane", &near_plane_, -10.f, 100.f);
@@ -83,7 +106,7 @@ void geos::camera::debug()
 
 glm::fmat4 geos::camera::calculate_view_matrix() const
 {
-    return glm::lookAtRH(eye_, center_, up_direction_);
+    return glm::lookAtRH(eye_, eye_ + front_, up_);
 }
 
 glm::fmat4 geos::camera::calculate_projection_matrix() const

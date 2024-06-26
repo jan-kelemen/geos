@@ -27,7 +27,7 @@ namespace geos
     class [[nodiscard]] application final : public vkrndr::vulkan_scene
     {
     public:
-        application(uint32_t width, uint32_t height);
+        application(uint32_t width, uint32_t height, bool capture_mouse);
 
         application(application const&) = delete;
 
@@ -42,6 +42,8 @@ namespace geos
         void begin_frame();
 
         void end_frame();
+
+        void fixed_update(float delta_time);
 
         void update(float delta_time);
 
@@ -79,6 +81,7 @@ namespace geos
 
         physics_simulation physics_simulation_;
 
+        bool capture_mouse_;
         camera camera_;
         scene scene_;
     };

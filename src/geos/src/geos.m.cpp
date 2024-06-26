@@ -1,3 +1,4 @@
+#include "cppext_numeric.hpp"
 #include <application.hpp>
 
 #include <sdl_window.hpp>
@@ -9,6 +10,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_video.h>
 
@@ -52,13 +54,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     vkrndr::sdl_guard const sdl_guard{SDL_INIT_VIDEO};
 
     vkrndr::sdl_window window{"geos",
-        static_cast<SDL_WindowFlags>(SDL_WINDOW_MAXIMIZED |
+        static_cast<SDL_WindowFlags>( // SDL_WINDOW_MAXIMIZED |
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI),
         true,
         512,
         512};
 
-    geos::application application{512, 512};
+    geos::application application{512, 512, !enable_validation_layers};
 
     auto context{vkrndr::create_context(&window, enable_validation_layers)};
     auto device{vkrndr::create_device(context)};
@@ -69,6 +71,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         application.attach_renderer(&device, &renderer);
 
         uint64_t last_tick{SDL_GetPerformanceCounter()};
+        uint64_t last_fixed_tick{last_tick};
+
         bool done{false};
         while (!done)
         {
@@ -89,12 +93,22 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
             }
 
             uint64_t const current_tick{SDL_GetPerformanceCounter()};
-            float const delta{static_cast<float>(current_tick - last_tick) /
-                static_cast<float>(SDL_GetPerformanceFrequency())};
+            float const delta{cppext::as_fp(current_tick - last_tick) /
+                cppext::as_fp(SDL_GetPerformanceFrequency())};
+            float const fixed_delta{
+                cppext::as_fp(current_tick - last_fixed_tick) /
+                cppext::as_fp(SDL_GetPerformanceFrequency())};
+            bool const do_fixed_update{fixed_delta >= 1.0f / 60.0f};
+
             last_tick = current_tick;
 
             renderer.begin_frame();
             application.begin_frame();
+            if (do_fixed_update)
+            {
+                application.fixed_update(fixed_delta);
+                last_fixed_tick = current_tick;
+            }
             application.update(delta);
             renderer.draw(&application);
             application.end_frame();

@@ -39,16 +39,24 @@
 
 // IWYU pragma: no_include <filesystem>
 
-geos::application::application(uint32_t width, uint32_t height)
-    : camera_{glm::fvec3{10.0f, 10.0f, 10.0f},
-          glm::fvec3{2.0f, -5.0f, 0.0f},
+geos::application::application(uint32_t const width,
+    uint32_t const height,
+    bool const capture_mouse)
+    : capture_mouse_{capture_mouse}
+    , camera_{glm::fvec3{10.0f, 2.0f, 10.0f},
           width,
           height,
           45.0f,
           1.0f,
           0.1f,
-          100.f}
+          100.f,
+          -135.0f,
+          0.0f}
 {
+    if (capture_mouse_)
+    {
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
 }
 
 void geos::application::handle_event(SDL_Event const& event)
@@ -77,11 +85,40 @@ void geos::application::handle_event(SDL_Event const& event)
             fmt::println("hit {}", hit->getUserIndex());
         }
     }
+    else if (event.type == SDL_KEYDOWN)
+    {
+        auto const& keyboard{event.key};
+        if (keyboard.keysym.scancode == SDL_SCANCODE_F3)
+        {
+            capture_mouse_ ^= true;
+            if (capture_mouse_)
+            {
+                SDL_SetRelativeMouseMode(SDL_TRUE);
+                SDL_GetRelativeMouseState(nullptr, nullptr);
+            }
+            else
+            {
+                SDL_SetRelativeMouseMode(SDL_FALSE);
+            }
+        }
+    }
 }
 
 void geos::application::begin_frame() { scene_.begin_frame(); }
 
 void geos::application::end_frame() { scene_.end_frame(); }
+
+void geos::application::fixed_update([[maybe_unused]] float const delta_time)
+{
+    if (capture_mouse_)
+    {
+        int x; // NOLINT
+        int y; // NOLINT
+        SDL_GetRelativeMouseState(&x, &y);
+
+        camera_.mouse_movement(-cppext::as_fp(x), cppext::as_fp(y));
+    }
+}
 
 void geos::application::update(float const delta_time)
 {
@@ -207,19 +244,14 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     registry_.emplace<mesh_component>(cube_entity, mesh);
 
-    static std::mt19937 generator{std::random_device{}()};
     static int entity_count{1};
 
-    auto const& phyisics_component{registry_.emplace<physics_component>(
-        cube_entity,
-        physics_simulation_.add_rigid_body(
-            std::make_unique<btBoxShape>(btVector3{1, 1, 1}),
-            1.0f,
-            btVector3{cppext::as_fp(
-                          std::uniform_int_distribution<int>(-5, 5)(generator)),
-                10,
-                cppext::as_fp(
-                    std::uniform_int_distribution<int>(-5, 5)(generator))}))};
+    auto const& phyisics_component{
+        registry_.emplace<physics_component>(cube_entity,
+            physics_simulation_.add_rigid_body(
+                std::make_unique<btBoxShape>(btVector3{1, 1, 1}),
+                1.0f,
+                btVector3{0, 10.0f + float(entity_count) * 5, 0}))};
 
     phyisics_component.rigid_body_->setUserIndex(++entity_count);
 }

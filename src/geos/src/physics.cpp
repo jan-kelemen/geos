@@ -32,12 +32,12 @@ geos::physics_simulation::physics_simulation()
     // TODO: TEMPORARY
     {
         btCollisionShape* ground_shape{new btBoxShape{
-            btVector3{btScalar{50.0f}, btScalar{50.0f}, btScalar{50.0f}}}};
+            btVector3{btScalar{50.0f}, btScalar{1.0f}, btScalar{50.0f}}}};
         collision_shapes_.push_back(ground_shape);
 
         btTransform ground_transform;
         ground_transform.setIdentity();
-        ground_transform.setOrigin(btVector3{0, -56, 0});
+        ground_transform.setOrigin(btVector3{0.0f, -1.0f, 0.0f});
 
         btScalar const mass{0.0f};
 
