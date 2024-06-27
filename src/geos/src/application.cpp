@@ -37,6 +37,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <vector>
 
 // IWYU pragma: no_include <filesystem>
@@ -141,21 +142,16 @@ void geos::application::attach_renderer(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* const renderer)
 {
     load_meshes(device, renderer);
-    load_meshes(device, renderer);
     scene_.attach_renderer(device, renderer);
 }
 
 void geos::application::detach_renderer(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* renderer)
 {
-    for (auto entity : registry_.view<mesh_component>())
-    {
-        destroy(device,
-            &registry_.get<mesh_component>(entity).mesh.vert_index_buffer);
-    }
-    registry_.clear<mesh_component>();
-
     scene_.detach_renderer(device, renderer);
+
+    registry_.clear<mesh_component>();
+    destroy(device, &model_mesh_);
 }
 
 VkClearValue geos::application::clear_color() { return scene_.clear_color(); }
@@ -194,17 +190,32 @@ void geos::application::draw_imgui() { camera_.debug(); }
 void geos::application::load_meshes(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* const renderer)
 {
-    std::unique_ptr<vkrndr::gltf_model> cube{renderer->load_model("cube.gltf")};
+    std::unique_ptr<vkrndr::gltf_model> model{
+        renderer->load_model("geos.gltf")};
 
-    auto const& cube_primitive{cube->nodes[0].mesh->primitives[0]};
+    std::vector<vkrndr::gltf_mesh const*> load_meshes;
+    std::vector<std::pair<buffer_part, glm::fmat4>> parts;
 
-    buffer_part cube_submesh{.vertex_offset = 0,
-        .vertex_count = vkrndr::count_cast(cube_primitive.vertices.size()),
-        .index_offset = 0,
-        .index_count = vkrndr::count_cast(cube_primitive.indices.size())};
+    int32_t vertex_count{};
+    int32_t index_count{};
+    for (auto const& node : model->nodes)
+    {
+        auto const& model_mesh{node.mesh};
+        load_meshes.push_back(&(*model_mesh));
 
-    size_t const vertices_size{cube_submesh.vertex_count * sizeof(vertex)};
-    size_t const indices_size{cube_submesh.index_count * sizeof(uint32_t)};
+        auto const& current_mesh{parts.emplace_back(
+            buffer_part{vertex_count,
+                vkrndr::count_cast(model_mesh->primitives[0].vertices.size()),
+                index_count,
+                vkrndr::count_cast(model_mesh->primitives[0].indices.size())},
+            local_matrix(node))};
+
+        vertex_count += current_mesh.first.vertex_count;
+        index_count += current_mesh.first.index_count;
+    }
+
+    size_t const vertices_size{vertex_count * sizeof(vertex)};
+    size_t const indices_size{index_count * sizeof(uint32_t)};
 
     vkrndr::vulkan_buffer staging_buffer{vkrndr::create_buffer(device,
         vertices_size + indices_size,
@@ -217,49 +228,60 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
             vkrndr::memory_region{.offset = 0,
                 .size = vertices_size + indices_size})};
 
-        vertex* const vertices{vert_index_map.as<vertex>(0)};
-        uint32_t* const indices{vert_index_map.as<uint32_t>(vertices_size)};
+        vertex* vertices{vert_index_map.as<vertex>(0)};
+        uint32_t* indices{vert_index_map.as<uint32_t>(vertices_size)};
 
-        float color{-1.0f / 36};
-        std::ranges::transform(cube_primitive.vertices,
-            vertices,
-            [&](vkrndr::gltf_vertex const& vert)
-            {
-                color += 1.0f / 36;
-                return vertex{.position = vert.position,
-                    .color = glm::fvec3(color, color, color)};
-            });
+        for (size_t i{}; i != load_meshes.size(); ++i)
+        {
+            auto const& mesh{load_meshes[i]};
+            auto const& part{parts[i].first};
 
-        std::ranges::copy(cube_primitive.indices, indices);
+            float color{-1.0f / part.vertex_count};
+            vertices = std::ranges::transform(mesh->primitives[0].vertices,
+                vertices,
+                [&](vkrndr::gltf_vertex const& vert)
+                {
+                    color += 1.0f / part.vertex_count;
+                    return vertex{.position = glm::fvec4(vert.position, 0.0f),
+                        .color = glm::fvec3{color, color, color}};
+                }).out;
+
+            indices =
+                std::ranges::copy(mesh->primitives[0].indices, indices).out;
+        }
 
         unmap_memory(device, &vert_index_map);
     }
 
-    auto const cube_entity{registry_.create()};
-
-    vkrndr::vulkan_buffer vert_index_buffer = create_buffer(device,
+    model_mesh_ = create_buffer(device,
         staging_buffer.size,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
             VK_BUFFER_USAGE_TRANSFER_DST_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    renderer->transfer_buffer(staging_buffer, vert_index_buffer);
+    renderer->transfer_buffer(staging_buffer, model_mesh_);
     destroy(device, &staging_buffer);
 
-    gpu_mesh mesh{.vert_index_buffer = vert_index_buffer,
-        .vertex_offset = 0,
-        .index_offset = vertices_size,
-        .submeshes = {cube_submesh}};
+    for (auto const& [part, transform] : parts)
+    {
+        auto const entity{registry_.create()};
 
-    registry_.emplace<mesh_component>(cube_entity, mesh);
+        gpu_mesh mesh{.vert_index_buffer = model_mesh_,
+            .vertex_offset = 0,
+            .index_offset = vertices_size,
+            .submeshes = {part}};
 
-    static int entity_count{1};
+        registry_.emplace<mesh_component>(entity, mesh);
 
-    auto const& phyisics_component{
-        registry_.emplace<physics_component>(cube_entity,
+        btVector3 const origin{transform[3][0],
+            10.0f, // transform[3][1],
+            transform[3][2]};
+
+        auto const& physics{registry_.emplace<physics_component>(entity,
             physics_simulation_.add_rigid_body(
                 std::make_unique<btBoxShape>(btVector3{1, 1, 1}),
                 1.0f,
-                btVector3{0, 10.0f + float(entity_count) * 5, 0}))};
+                origin))};
 
-    phyisics_component.rigid_body_->setUserIndex(++entity_count);
+        physics.rigid_body_->setUserIndex(part.vertex_offset);
+    }
 }

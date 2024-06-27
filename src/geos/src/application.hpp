@@ -5,6 +5,7 @@
 #include <physics.hpp>
 #include <scene.hpp>
 
+#include <vulkan_buffer.hpp>
 #include <vulkan_scene.hpp>
 
 #include <entt/entt.hpp>
@@ -83,6 +84,8 @@ namespace geos
 
         bool capture_mouse_;
         camera camera_;
+
+        vkrndr::vulkan_buffer model_mesh_;
         scene scene_;
     };
 } // namespace geos
