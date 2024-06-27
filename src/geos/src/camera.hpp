@@ -91,6 +91,8 @@ namespace geos
         float yaw_;
         float pitch_;
 
+        float mouse_sensitivity_{0.15f};
+
         glm::fmat4 view_matrix_;
         glm::fmat4 projection_matrix_;
         glm::fmat4 view_projection_matrix_;

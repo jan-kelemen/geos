@@ -26,15 +26,17 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/vec3.hpp>
 
-#include <SDL_events.h>
-#include <SDL_video.h>
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_mouse.h>
+#include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_stdinc.h>
+#include <SDL2/SDL_video.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <random>
 #include <vector>
 
 // IWYU pragma: no_include <filesystem>
@@ -57,6 +59,12 @@ geos::application::application(uint32_t const width,
     {
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
+
+    auto* const terrain_box{physics_simulation_.add_rigid_body(
+        std::make_unique<btBoxShape>(btVector3{50.0f, 1.0f, 50.0f}),
+        0.0f,
+        btVector3{0.0f, -1.0f, 0.0f})};
+    terrain_box->setUserIndex(1);
 }
 
 void geos::application::handle_event(SDL_Event const& event)

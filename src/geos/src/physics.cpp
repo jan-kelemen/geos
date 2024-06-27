@@ -1,3 +1,4 @@
+#include <memory>
 #include <physics.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btBroadphaseInterface.h>
@@ -28,35 +29,6 @@ geos::physics_simulation::physics_simulation()
           collision_configuration_.get())}
 {
     world_->setGravity(btVector3(0, -10, 0));
-
-    // TODO: TEMPORARY
-    {
-        btCollisionShape* ground_shape{new btBoxShape{
-            btVector3{btScalar{50.0f}, btScalar{1.0f}, btScalar{50.0f}}}};
-        collision_shapes_.push_back(ground_shape);
-
-        btTransform ground_transform;
-        ground_transform.setIdentity();
-        ground_transform.setOrigin(btVector3{0.0f, -1.0f, 0.0f});
-
-        btScalar const mass{0.0f};
-
-        btVector3 local_inertia{0, 0, 0};
-
-        // NOLINTBEGIN(cppcoreguidelines-owning-memory)
-        btDefaultMotionState* const motion_state{
-            new btDefaultMotionState{ground_transform}};
-        btRigidBody::btRigidBodyConstructionInfo const rigid_body_info{mass,
-            motion_state,
-            ground_shape,
-            local_inertia};
-        btRigidBody* const body{new btRigidBody{rigid_body_info}};
-        body->setUserIndex(1);
-        // NOLINTEND(cppcoreguidelines-owning-memory)
-
-        // add the body to the dynamics world
-        world_->addRigidBody(body);
-    }
 }
 
 geos::physics_simulation::~physics_simulation()
@@ -107,7 +79,6 @@ btRigidBody* geos::physics_simulation::add_rigid_body(
         collision_shapes_[collision_shapes_.size() - 1],
         local_inertia};
     btRigidBody* const body{new btRigidBody{rigid_body_info}};
-    body->setUserIndex(2);
     // NOLINTEND(cppcoreguidelines-owning-memory)
 
     // add the body to the dynamics world

@@ -2,6 +2,7 @@
 
 #include <cppext_numeric.hpp>
 
+#include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
@@ -9,7 +10,7 @@
 
 #include <imgui.h>
 
-#include <fmt/format.h>
+#include <cmath>
 
 geos::camera::camera(glm::fvec3 const& eye,
     uint32_t const width,
@@ -38,9 +39,9 @@ void geos::camera::update()
     constexpr glm::fvec3 world_up{0.0f, -1.0f, 0.0f};
 
     glm::vec3 front;
-    front.x = cos(glm::radians(yaw_)) * cos(glm::radians(pitch_));
-    front.y = sin(glm::radians(pitch_));
-    front.z = sin(glm::radians(yaw_)) * cos(glm::radians(pitch_));
+    front.x = cosf(glm::radians(yaw_)) * cosf(glm::radians(pitch_));
+    front.y = sinf(glm::radians(pitch_));
+    front.z = sinf(glm::radians(yaw_)) * cosf(glm::radians(pitch_));
     front_ = glm::normalize(front);
 
     right_ = glm::normalize(glm::cross(front_, world_up));
@@ -54,8 +55,8 @@ void geos::camera::update()
 void geos::camera::mouse_movement(float const relative_x,
     float const relative_y)
 {
-    yaw_ += relative_x;
-    pitch_ += relative_y;
+    yaw_ += relative_x * mouse_sensitivity_;
+    pitch_ += relative_y * mouse_sensitivity_;
 }
 
 std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast_center() const
@@ -101,6 +102,9 @@ void geos::camera::debug()
     ImGui::SliderFloat("Aspect ratio", &aspect_ratio_, 0.0f, 2.0f);
     ImGui::SliderFloat("Near plane", &near_plane_, -10.f, 100.f);
     ImGui::SliderFloat("Far plane", &far_plane_, -10.f, 100.f);
+    ImGui::SliderFloat("Yaw", &yaw_, -360.0f, 360.f);
+    ImGui::SliderFloat("Pitch", &pitch_, -90.0f, 90.0f);
+    ImGui::SliderFloat("Mouse sensitivity", &mouse_sensitivity_, 0.05f, 1.0f);
     ImGui::End();
 }
 
