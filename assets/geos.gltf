@@ -27,11 +27,6 @@
 		{
 			"mesh":1,
 			"name":"Rectangle",
-			"scale":[
-				1,
-				2,
-				1
-			],
 			"translation":[
 				3,
 				0,
@@ -41,11 +36,6 @@
 		{
 			"mesh":2,
 			"name":"Thin Rectangle",
-			"scale":[
-				0.5,
-				2,
-				1
-			],
 			"translation":[
 				6,
 				0,
@@ -55,11 +45,6 @@
 		{
 			"mesh":3,
 			"name":"Cylinder",
-			"scale":[
-				1,
-				2,
-				1
-			],
 			"translation":[
 				9,
 				0,
@@ -87,11 +72,6 @@
 		{
 			"mesh":6,
 			"name":"Arch",
-			"scale":[
-				2,
-				1,
-				1
-			],
 			"translation":[
 				23,
 				0,
@@ -260,12 +240,12 @@
 			"count":24,
 			"max":[
 				1,
-				1,
+				2,
 				1
 			],
 			"min":[
 				-1,
-				-1,
+				-2,
 				-1
 			],
 			"type":"VEC3"
@@ -287,13 +267,13 @@
 			"componentType":5126,
 			"count":24,
 			"max":[
-				1,
-				1,
+				0.5,
+				2,
 				1
 			],
 			"min":[
-				-1,
-				-1,
+				-0.5,
+				-2,
 				-1
 			],
 			"type":"VEC3"
@@ -316,12 +296,12 @@
 			"count":192,
 			"max":[
 				1,
-				1,
+				2,
 				1
 			],
 			"min":[
 				-1,
-				-1,
+				-2,
 				-1
 			],
 			"type":"VEC3"
@@ -417,12 +397,12 @@
 			"componentType":5126,
 			"count":247,
 			"max":[
-				1,
+				2,
 				1,
 				1
 			],
 			"min":[
-				-1,
+				-2,
 				-1,
 				-1
 			],
