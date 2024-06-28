@@ -10,6 +10,7 @@
 
 #include <imgui.h>
 
+#include <algorithm>
 #include <cmath>
 
 geos::camera::camera(glm::fvec3 const& eye,
@@ -55,8 +56,10 @@ void geos::camera::update()
 void geos::camera::mouse_movement(float const relative_x,
     float const relative_y)
 {
-    yaw_ += relative_x * mouse_sensitivity_;
-    pitch_ += relative_y * mouse_sensitivity_;
+    // yaw_ += relative_x * mouse_sensitivity_;
+    yaw_ = std::fmodf(yaw_ + relative_x * mouse_sensitivity_, 180.0f);
+    pitch_ =
+        std::clamp(pitch_ + relative_y * mouse_sensitivity_, -90.0f, 90.0f);
 }
 
 std::pair<glm::fvec3, glm::fvec3> geos::camera::raycast_center() const
@@ -97,12 +100,12 @@ void geos::camera::resize(uint32_t width, uint32_t height)
 void geos::camera::debug()
 {
     ImGui::Begin("Camera");
-    ImGui::SliderFloat3("Eye", glm::value_ptr(eye_), -10.f, 10.f);
+    ImGui::SliderFloat3("Eye", glm::value_ptr(eye_), -50.f, 50.f);
     ImGui::SliderFloat("FOV", &fov_, 0.0f, 360.0f);
     ImGui::SliderFloat("Aspect ratio", &aspect_ratio_, 0.0f, 2.0f);
     ImGui::SliderFloat("Near plane", &near_plane_, -10.f, 100.f);
     ImGui::SliderFloat("Far plane", &far_plane_, -10.f, 100.f);
-    ImGui::SliderFloat("Yaw", &yaw_, -360.0f, 360.f);
+    ImGui::SliderFloat("Yaw", &yaw_, -180.0f, 180.f);
     ImGui::SliderFloat("Pitch", &pitch_, -90.0f, 90.0f);
     ImGui::SliderFloat("Mouse sensitivity", &mouse_sensitivity_, 0.05f, 1.0f);
     ImGui::End();
