@@ -8,6 +8,7 @@
 #include <BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h>
 #include <BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
@@ -28,6 +29,7 @@ geos::physics_simulation::physics_simulation()
           solver_.get(),
           collision_configuration_.get())}
 {
+    btGImpactCollisionAlgorithm::registerAlgorithm(dispatcher_.get());
     world_->setGravity(btVector3(0, -10, 0));
 }
 

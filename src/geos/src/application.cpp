@@ -16,6 +16,8 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletCollision/CollisionShapes/btTriangleMesh.h>
+#include <BulletCollision/Gimpact/btGImpactShape.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
@@ -195,6 +197,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     std::vector<vkrndr::gltf_mesh const*> load_meshes;
     std::vector<std::pair<buffer_part, glm::fmat4>> parts;
+    std::vector<std::unique_ptr<btTriangleMesh>> collision_meshes;
 
     int32_t vertex_count{};
     int32_t index_count{};
@@ -236,8 +239,11 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
             auto const& mesh{load_meshes[i]};
             auto const& part{parts[i].first};
 
+            auto const& gltf_vertices{mesh->primitives[0].vertices};
+            auto const& gltf_indices{mesh->primitives[0].indices};
+
             float color{-1.0f / part.vertex_count};
-            vertices = std::ranges::transform(mesh->primitives[0].vertices,
+            vertices = std::ranges::transform(gltf_vertices,
                 vertices,
                 [&](vkrndr::gltf_vertex const& vert)
                 {
@@ -248,6 +254,23 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
             indices =
                 std::ranges::copy(mesh->primitives[0].indices, indices).out;
+
+            auto const gltf_to_bt = [](vkrndr::gltf_vertex const& vert) {
+                return btVector3{vert.position.x,
+                    vert.position.y,
+                    vert.position.z};
+            };
+
+            collision_meshes.push_back(
+                std::make_unique<btTriangleMesh>(true, false));
+
+            for (uint32_t i{}; i != part.index_count; i += 3)
+            {
+                collision_meshes.back()->addTriangle(
+                    gltf_to_bt(gltf_vertices[gltf_indices[i]]),
+                    gltf_to_bt(gltf_vertices[gltf_indices[i + 1]]),
+                    gltf_to_bt(gltf_vertices[gltf_indices[i + 2]]));
+            }
         }
 
         unmap_memory(device, &vert_index_map);
@@ -261,8 +284,10 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
     renderer->transfer_buffer(staging_buffer, model_mesh_);
     destroy(device, &staging_buffer);
 
-    for (auto const& [part, transform] : parts)
+    for (size_t i{}; i != load_meshes.size(); ++i)
     {
+        auto const& [part, transform] = parts[i];
+
         auto const entity{registry_.create()};
 
         gpu_mesh mesh{.vert_index_buffer = model_mesh_,
@@ -275,10 +300,12 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         btVector3 const origin{transform[3][0],
             10.0f, // transform[3][1],
             transform[3][2]};
+        auto collision{std::make_unique<btGImpactMeshShape>(
+            collision_meshes[i].release())};
+        collision->updateBound();
 
         auto const& physics{registry_.emplace<physics_component>(entity,
-            physics_simulation_.add_rigid_body(
-                std::make_unique<btBoxShape>(btVector3{1, 1, 1}),
+            physics_simulation_.add_rigid_body(std::move(collision),
                 1.0f,
                 origin))};
 
