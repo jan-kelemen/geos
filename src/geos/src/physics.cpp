@@ -89,22 +89,35 @@ btRigidBody* geos::physics_simulation::add_rigid_body(
     return body;
 }
 
+void geos::physics_simulation::add_constraint(
+    btTypedConstraint* const constraint)
+{
+    world_->addConstraint(constraint);
+}
+
+void geos::physics_simulation::remove_constraint(
+    btTypedConstraint* const constraint)
+{
+    world_->removeConstraint(constraint);
+}
+
 void geos::physics_simulation::update(float const delta_time)
 {
     world_->stepSimulation(delta_time, 10);
 }
 
-btCollisionObject const*
+std::pair<btCollisionObject const*, btVector3>
 geos::physics_simulation::raycast(btVector3 const& from, btVector3 const& to)
 {
     btCollisionWorld::ClosestRayResultCallback callback{from, to};
     world_->rayTest(from, to, callback);
     if (callback.hasHit())
     {
-        return callback.m_collisionObject;
+        return std::make_pair(callback.m_collisionObject,
+            callback.m_hitPointWorld);
     }
 
-    return nullptr;
+    return {nullptr, {}};
 }
 
 btTransform geos::physics_component::position() const

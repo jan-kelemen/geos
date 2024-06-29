@@ -18,6 +18,7 @@
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
+#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
@@ -70,6 +71,8 @@ geos::application::application(uint32_t const width,
     terrain_box->setUserIndex(1);
 }
 
+geos::application::~application() = default;
+
 void geos::application::handle_event(SDL_Event const& event)
 {
     if (event.type == SDL_WINDOWEVENT)
@@ -80,20 +83,6 @@ void geos::application::handle_event(SDL_Event const& event)
         {
             camera_.resize(cppext::narrow<uint32_t>(window.data1),
                 cppext::narrow<uint32_t>(window.data2));
-        }
-    }
-    else if (event.type == SDL_MOUSEMOTION)
-    {
-        auto const& motion{event.motion};
-        auto const& [near, far] =
-            camera_.raycast(cppext::narrow<uint32_t>(motion.x),
-                cppext::narrow<uint32_t>(motion.y));
-        auto const* const hit{
-            physics_simulation_.raycast({near.x, near.y, near.z},
-                {far.x, far.y, far.z})};
-        if (hit)
-        {
-            fmt::println("hit {}", hit->getUserIndex());
         }
     }
     else if (event.type == SDL_KEYDOWN)
@@ -111,6 +100,97 @@ void geos::application::handle_event(SDL_Event const& event)
             {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
             }
+        }
+    }
+    else if (event.type == SDL_MOUSEBUTTONDOWN)
+    {
+        auto const& button{event.button};
+        auto const& [near, far] = [this]()
+        {
+            if (capture_mouse_)
+            {
+                return camera_.raycast_center();
+            }
+
+            int x; // NOLINT
+            int y; // NOLINT
+            SDL_GetMouseState(&x, &y);
+            return camera_.raycast(cppext::narrow<uint32_t>(x),
+                cppext::narrow<uint32_t>(y));
+        }();
+
+        auto [body, point] =
+            physics_simulation_.raycast({near.x, near.y, near.z},
+                {far.x, far.y, far.z});
+        if (!body)
+        {
+            return;
+        }
+
+        if (auto rigid_body{
+                btRigidBody::upcast(const_cast<btCollisionObject*>(body))})
+        {
+            if (rigid_body->isStaticObject() || rigid_body->isKinematicObject())
+            {
+                return;
+            }
+
+            picked_body_ = rigid_body;
+            picked_body_->setActivationState(DISABLE_DEACTIVATION);
+            auto const local_pivot{
+                rigid_body->getCenterOfMassTransform().inverse() * point};
+            pick_constraint_ =
+                std::make_unique<btPoint2PointConstraint>(*rigid_body,
+                    local_pivot);
+            physics_simulation_.add_constraint(pick_constraint_.get());
+            pick_constraint_->m_setting.m_impulseClamp = 30.0f;
+            pick_constraint_->m_setting.m_tau = 0.001f;
+
+            pick_position_ = {far.x, far.y, far.z};
+            hit_position_ = point;
+            pick_distance_ =
+                (hit_position_ - btVector3{near.x, near.y, near.z}).length();
+        }
+    }
+    else if (event.type == SDL_MOUSEMOTION)
+    {
+        auto const& motion{event.motion};
+
+        if (!picked_body_ || !pick_constraint_)
+        {
+            return;
+        }
+
+        auto const& [near, far] = [this]()
+        {
+            if (capture_mouse_)
+            {
+                return camera_.raycast_center();
+            }
+
+            int x; // NOLINT
+            int y; // NOLINT
+            SDL_GetMouseState(&x, &y);
+            return camera_.raycast(cppext::narrow<uint32_t>(x),
+                cppext::narrow<uint32_t>(y));
+        }();
+
+        auto const direction{glm::normalize(far - near) * pick_distance_};
+        auto const new_pivot{near + direction};
+        pick_constraint_->setPivotB({new_pivot.x, new_pivot.y, new_pivot.z});
+    }
+
+    else if (event.type == SDL_MOUSEBUTTONUP)
+    {
+        if (pick_constraint_)
+        {
+            picked_body_->forceActivationState(ACTIVE_TAG);
+            picked_body_->activate();
+
+            physics_simulation_.remove_constraint(pick_constraint_.get());
+
+            pick_constraint_.reset();
+            picked_body_ = nullptr;
         }
     }
 }

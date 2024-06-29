@@ -13,6 +13,7 @@ class btCollisionShape;
 class btDefaultCollisionConfiguration;
 class btDiscreteDynamicsWorld;
 class btRigidBody;
+class btTypedConstraint;
 class btSequentialImpulseConstraintSolver;
 
 namespace geos
@@ -34,10 +35,14 @@ namespace geos
             float mass,
             btVector3 const& origin);
 
+        void add_constraint(btTypedConstraint* constraint);
+
+        void remove_constraint(btTypedConstraint* constraint);
+
         void update(float delta_time);
 
-        [[nodiscard]] btCollisionObject const* raycast(btVector3 const& from,
-            btVector3 const& to);
+        [[nodiscard]] std::pair<btCollisionObject const*, btVector3>
+        raycast(btVector3 const& from, btVector3 const& to);
 
     public:
         physics_simulation& operator=(physics_simulation const&) = delete;

@@ -8,6 +8,8 @@
 #include <vulkan_buffer.hpp>
 #include <vulkan_scene.hpp>
 
+#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
+
 #include <entt/entt.hpp>
 
 #include <SDL2/SDL_events.h>
@@ -35,7 +37,7 @@ namespace geos
         application(application&&) noexcept = delete;
 
     public:
-        ~application() override = default;
+        ~application() override;
 
     public:
         void handle_event(SDL_Event const& event);
@@ -83,6 +85,12 @@ namespace geos
         physics_simulation physics_simulation_;
 
         bool capture_mouse_;
+        btCollisionObject const* picked_body_{nullptr};
+        std::unique_ptr<btPoint2PointConstraint> pick_constraint_{};
+        btVector3 pick_position_{};
+        btVector3 hit_position_{};
+        btScalar pick_distance_{};
+
         camera camera_;
 
         vkrndr::vulkan_buffer model_mesh_;

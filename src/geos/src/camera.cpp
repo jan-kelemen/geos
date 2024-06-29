@@ -57,7 +57,7 @@ void geos::camera::mouse_movement(float const relative_x,
     float const relative_y)
 {
     // yaw_ += relative_x * mouse_sensitivity_;
-    yaw_ = std::fmodf(yaw_ + relative_x * mouse_sensitivity_, 180.0f);
+    yaw_ = fmodf(yaw_ + relative_x * mouse_sensitivity_, 180.0f);
     pitch_ =
         std::clamp(pitch_ + relative_y * mouse_sensitivity_, -90.0f, 90.0f);
 }
