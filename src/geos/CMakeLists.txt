@@ -9,6 +9,8 @@ target_sources(geos
         ${CMAKE_CURRENT_SOURCE_DIR}/src/geos.m.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/mesh.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/mesh.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/mouse.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/physics.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/physics.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/scene.cpp

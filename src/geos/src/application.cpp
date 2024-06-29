@@ -48,8 +48,7 @@
 geos::application::application(uint32_t const width,
     uint32_t const height,
     bool const capture_mouse)
-    : capture_mouse_{capture_mouse}
-    , camera_{glm::fvec3{10.0f, 2.0f, 10.0f},
+    : camera_{glm::fvec3{10.0f, 2.0f, 10.0f},
           width,
           height,
           45.0f,
@@ -58,11 +57,9 @@ geos::application::application(uint32_t const width,
           100.f,
           -135.0f,
           0.0f}
+    , mouse_{&camera_, &physics_simulation_}
 {
-    if (capture_mouse_)
-    {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
-    }
+    mouse_.set_capture(capture_mouse);
 
     auto* const terrain_box{physics_simulation_.add_rigid_body(
         std::make_unique<btBoxShape>(btVector3{50.0f, 1.0f, 50.0f}),
@@ -90,109 +87,11 @@ void geos::application::handle_event(SDL_Event const& event)
         auto const& keyboard{event.key};
         if (keyboard.keysym.scancode == SDL_SCANCODE_F3)
         {
-            capture_mouse_ ^= true;
-            if (capture_mouse_)
-            {
-                SDL_SetRelativeMouseMode(SDL_TRUE);
-                SDL_GetRelativeMouseState(nullptr, nullptr);
-            }
-            else
-            {
-                SDL_SetRelativeMouseMode(SDL_FALSE);
-            }
+            mouse_.toggle_capture();
         }
     }
-    else if (event.type == SDL_MOUSEBUTTONDOWN)
-    {
-        auto const& button{event.button};
-        auto const& [near, far] = [this]()
-        {
-            if (capture_mouse_)
-            {
-                return camera_.raycast_center();
-            }
 
-            int x; // NOLINT
-            int y; // NOLINT
-            SDL_GetMouseState(&x, &y);
-            return camera_.raycast(cppext::narrow<uint32_t>(x),
-                cppext::narrow<uint32_t>(y));
-        }();
-
-        auto [body, point] =
-            physics_simulation_.raycast({near.x, near.y, near.z},
-                {far.x, far.y, far.z});
-        if (!body)
-        {
-            return;
-        }
-
-        if (auto rigid_body{
-                btRigidBody::upcast(const_cast<btCollisionObject*>(body))})
-        {
-            if (rigid_body->isStaticObject() || rigid_body->isKinematicObject())
-            {
-                return;
-            }
-
-            picked_body_ = rigid_body;
-            picked_body_->setActivationState(DISABLE_DEACTIVATION);
-            auto const local_pivot{
-                rigid_body->getCenterOfMassTransform().inverse() * point};
-            pick_constraint_ =
-                std::make_unique<btPoint2PointConstraint>(*rigid_body,
-                    local_pivot);
-            physics_simulation_.add_constraint(pick_constraint_.get());
-            pick_constraint_->m_setting.m_impulseClamp = 30.0f;
-            pick_constraint_->m_setting.m_tau = 0.001f;
-
-            pick_position_ = {far.x, far.y, far.z};
-            hit_position_ = point;
-            pick_distance_ =
-                (hit_position_ - btVector3{near.x, near.y, near.z}).length();
-        }
-    }
-    else if (event.type == SDL_MOUSEMOTION)
-    {
-        auto const& motion{event.motion};
-
-        if (!picked_body_ || !pick_constraint_)
-        {
-            return;
-        }
-
-        auto const& [near, far] = [this]()
-        {
-            if (capture_mouse_)
-            {
-                return camera_.raycast_center();
-            }
-
-            int x; // NOLINT
-            int y; // NOLINT
-            SDL_GetMouseState(&x, &y);
-            return camera_.raycast(cppext::narrow<uint32_t>(x),
-                cppext::narrow<uint32_t>(y));
-        }();
-
-        auto const direction{glm::normalize(far - near) * pick_distance_};
-        auto const new_pivot{near + direction};
-        pick_constraint_->setPivotB({new_pivot.x, new_pivot.y, new_pivot.z});
-    }
-
-    else if (event.type == SDL_MOUSEBUTTONUP)
-    {
-        if (pick_constraint_)
-        {
-            picked_body_->forceActivationState(ACTIVE_TAG);
-            picked_body_->activate();
-
-            physics_simulation_.remove_constraint(pick_constraint_.get());
-
-            pick_constraint_.reset();
-            picked_body_ = nullptr;
-        }
-    }
+    mouse_.handle_event(event);
 }
 
 void geos::application::begin_frame() { scene_.begin_frame(); }
@@ -201,7 +100,7 @@ void geos::application::end_frame() { scene_.end_frame(); }
 
 void geos::application::fixed_update([[maybe_unused]] float const delta_time)
 {
-    if (capture_mouse_)
+    if (mouse_.capture())
     {
         int x; // NOLINT
         int y; // NOLINT

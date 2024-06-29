@@ -2,13 +2,12 @@
 #define GEOS_APPLICATION_INCLUDED
 
 #include <camera.hpp>
+#include <mouse.hpp>
 #include <physics.hpp>
 #include <scene.hpp>
 
 #include <vulkan_buffer.hpp>
 #include <vulkan_scene.hpp>
-
-#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 
 #include <entt/entt.hpp>
 
@@ -83,15 +82,8 @@ namespace geos
         entt::registry registry_;
 
         physics_simulation physics_simulation_;
-
-        bool capture_mouse_;
-        btCollisionObject const* picked_body_{nullptr};
-        std::unique_ptr<btPoint2PointConstraint> pick_constraint_{};
-        btVector3 pick_position_{};
-        btVector3 hit_position_{};
-        btScalar pick_distance_{};
-
         camera camera_;
+        mouse mouse_;
 
         vkrndr::vulkan_buffer model_mesh_;
         scene scene_;
