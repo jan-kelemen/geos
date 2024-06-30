@@ -52,13 +52,13 @@ bool geos::mouse::handle_event(SDL_Event const& event)
 
             picked_body_ = rigid_body;
             picked_body_->setActivationState(DISABLE_DEACTIVATION);
+
             auto const local_pivot{
                 rigid_body->getCenterOfMassTransform().inverse() * point};
             pick_constraint_ =
-                std::make_unique<btPoint2PointConstraint>(*rigid_body,
-                    local_pivot);
+                std::make_unique<btPoint2PointConstraint>(*rigid_body, point);
             physics_simulation_->add_constraint(pick_constraint_.get());
-            pick_constraint_->m_setting.m_impulseClamp = 30.0f;
+            pick_constraint_->m_setting.m_impulseClamp = 10.0f;
             pick_constraint_->m_setting.m_tau = 0.001f;
 
             pick_position_ = {far.x, far.y, far.z};

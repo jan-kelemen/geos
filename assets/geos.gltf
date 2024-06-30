@@ -81,14 +81,9 @@
 		{
 			"mesh":7,
 			"name":"Sorter",
-			"scale":[
-				0.864945113658905,
-				0.864945113658905,
-				0.864945113658905
-			],
 			"translation":[
-				-11,
-				0,
+				-15,
+				4,
 				0
 			]
 		}
@@ -186,7 +181,7 @@
 			]
 		},
 		{
-			"name":"Sorter",
+			"name":"Sorter.001",
 			"primitives":[
 				{
 					"attributes":{
@@ -429,15 +424,15 @@
 		{
 			"bufferView":26,
 			"componentType":5126,
-			"count":761,
+			"count":888,
 			"max":[
-				8.00000286102295,
-				1,
+				8,
+				6,
 				8
 			],
 			"min":[
-				-7.999997138977051,
-				-1,
+				-8,
+				-6,
 				-8
 			],
 			"type":"VEC3"
@@ -445,19 +440,19 @@
 		{
 			"bufferView":27,
 			"componentType":5126,
-			"count":761,
+			"count":888,
 			"type":"VEC3"
 		},
 		{
 			"bufferView":28,
 			"componentType":5126,
-			"count":761,
+			"count":888,
 			"type":"VEC2"
 		},
 		{
 			"bufferView":29,
 			"componentType":5123,
-			"count":1692,
+			"count":1842,
 			"type":"SCALAR"
 		}
 	],
@@ -620,32 +615,32 @@
 		},
 		{
 			"buffer":0,
-			"byteLength":9132,
+			"byteLength":10656,
 			"byteOffset":22892,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":9132,
-			"byteOffset":32024,
+			"byteLength":10656,
+			"byteOffset":33548,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":6088,
-			"byteOffset":41156,
+			"byteLength":7104,
+			"byteOffset":44204,
 			"target":34962
 		},
 		{
 			"buffer":0,
-			"byteLength":3384,
-			"byteOffset":47244,
+			"byteLength":3684,
+			"byteOffset":51308,
 			"target":34963
 		}
 	],
 	"buffers":[
 		{
-			"byteLength":50628,
+			"byteLength":54992,
 			"uri":"geos.bin"
 		}
 	]

@@ -175,7 +175,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         renderer->load_model("geos.gltf")};
 
     std::vector<vkrndr::gltf_mesh const*> load_meshes;
-    std::vector<std::pair<buffer_part, glm::fmat4>> parts;
+    std::vector<std::tuple<buffer_part, glm::fmat4, btScalar>> parts;
     std::vector<std::unique_ptr<btTriangleMesh>> collision_meshes;
 
     int32_t vertex_count{};
@@ -190,10 +190,11 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
                 vkrndr::count_cast(model_mesh->primitives[0].vertices.size()),
                 index_count,
                 vkrndr::count_cast(model_mesh->primitives[0].indices.size())},
-            local_matrix(node))};
+            local_matrix(node),
+            node.name != "Sorter" ? 1.0f : 0.0f)};
 
-        vertex_count += current_mesh.first.vertex_count;
-        index_count += current_mesh.first.index_count;
+        vertex_count += std::get<0>(current_mesh).vertex_count;
+        index_count += std::get<0>(current_mesh).index_count;
     }
 
     size_t const vertices_size{vertex_count * sizeof(vertex)};
@@ -216,7 +217,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         for (size_t i{}; i != load_meshes.size(); ++i)
         {
             auto const& mesh{load_meshes[i]};
-            auto const& part{parts[i].first};
+            auto const& part{std::get<0>(parts[i])};
 
             auto const& gltf_vertices{mesh->primitives[0].vertices};
             auto const& gltf_indices{mesh->primitives[0].indices};
@@ -265,7 +266,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     for (size_t i{}; i != load_meshes.size(); ++i)
     {
-        auto const& [part, transform] = parts[i];
+        auto const& [part, transform, mass] = parts[i];
 
         auto const entity{registry_.create()};
 
@@ -277,7 +278,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         registry_.emplace<mesh_component>(entity, mesh);
 
         btVector3 const origin{transform[3][0],
-            10.0f, // transform[3][1],
+            mass != 0.0f ? 100.0f : transform[3][1],
             transform[3][2]};
         auto collision{std::make_unique<btGImpactMeshShape>(
             collision_meshes[i].release())};
@@ -285,7 +286,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
         auto const& physics{registry_.emplace<physics_component>(entity,
             physics_simulation_.add_rigid_body(std::move(collision),
-                1.0f,
+                mass,
                 origin))};
 
         physics.rigid_body_->setUserIndex(part.vertex_offset);
