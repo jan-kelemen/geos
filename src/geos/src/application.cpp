@@ -48,15 +48,15 @@
 geos::application::application(uint32_t const width,
     uint32_t const height,
     bool const capture_mouse)
-    : camera_{glm::fvec3{10.0f, 2.0f, 10.0f},
+    : camera_{glm::fvec3{0.0f, 50.0f, 0.0f},
           width,
           height,
           45.0f,
           1.0f,
           0.1f,
           100.f,
-          -135.0f,
-          0.0f}
+          90.0f,
+          -90.0f}
     , mouse_{&camera_, &physics_simulation_}
 {
     mouse_.set_capture(capture_mouse);
@@ -191,7 +191,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
                 index_count,
                 vkrndr::count_cast(model_mesh->primitives[0].indices.size())},
             local_matrix(node),
-            node.name != "Sorter" ? 1.0f : 0.0f)};
+            node.name != "Sorter" ? 100.0f : 0.0f)};
 
         vertex_count += std::get<0>(current_mesh).vertex_count;
         index_count += std::get<0>(current_mesh).index_count;

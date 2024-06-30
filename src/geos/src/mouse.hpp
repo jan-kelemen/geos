@@ -56,8 +56,6 @@ namespace geos
 
         btCollisionObject const* picked_body_{nullptr};
         std::unique_ptr<btPoint2PointConstraint> pick_constraint_{};
-        btVector3 pick_position_{};
-        btVector3 hit_position_{};
         btScalar pick_distance_{};
     };
 } // namespace geos

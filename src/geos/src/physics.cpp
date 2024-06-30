@@ -92,7 +92,7 @@ btRigidBody* geos::physics_simulation::add_rigid_body(
 void geos::physics_simulation::add_constraint(
     btTypedConstraint* const constraint)
 {
-    world_->addConstraint(constraint);
+    world_->addConstraint(constraint, true);
 }
 
 void geos::physics_simulation::remove_constraint(
