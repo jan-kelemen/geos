@@ -168,7 +168,8 @@ void geos::scene::attach_renderer(vkrndr::vulkan_device* device,
             .add_shader(VK_SHADER_STAGE_FRAGMENT_BIT, "scene.frag.spv", "main")
             .with_rasterization_samples(vulkan_device_->max_msaa_samples)
             .add_vertex_input(binding_description(), attribute_descriptions())
-            .with_culling(VK_CULL_MODE_BACK_BIT, VK_FRONT_FACE_CLOCKWISE)
+            .with_culling(VK_CULL_MODE_BACK_BIT,
+                VK_FRONT_FACE_COUNTER_CLOCKWISE)
             .with_depth_test(depth_buffer_.format)
             .build());
 

@@ -118,10 +118,14 @@ glm::fmat4 geos::camera::calculate_view_matrix() const
 
 glm::fmat4 geos::camera::calculate_projection_matrix() const
 {
-    return glm::perspectiveRH_ZO(glm::radians(fov_),
+    auto rv{glm::perspectiveRH_ZO(glm::radians(fov_),
         aspect_ratio_,
         near_plane_,
-        far_plane_);
+        far_plane_)};
+
+    rv[1][1] *= -1;
+
+    return rv;
 }
 
 glm::fmat4 geos::camera::calculate_view_projection_matrix() const

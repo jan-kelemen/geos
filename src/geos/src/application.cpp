@@ -55,7 +55,7 @@ geos::application::application(uint32_t const width,
           1.0f,
           0.1f,
           100.f,
-          90.0f,
+          -90.0f,
           -90.0f}
     , mouse_{&camera_, &physics_simulation_}
 {
