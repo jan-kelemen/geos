@@ -43,6 +43,7 @@ namespace geos
     {
         alignas(16) glm::fvec3 position;
         alignas(16) glm::fvec3 color;
+        alignas(16) glm::fvec3 normal;
     };
 
     DISABLE_WARNING_POP

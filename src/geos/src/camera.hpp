@@ -35,14 +35,19 @@ namespace geos
 
         [[nodiscard]] float aspect_ratio() const { return aspect_ratio_; }
 
-        [[nodiscard]] glm::fmat4 view_matrix() const { return view_matrix_; }
+        [[nodiscard]] glm::fvec3 const& position() const { return eye_; }
 
-        [[nodiscard]] glm::fmat4 projection_matrix() const
+        [[nodiscard]] glm::fmat4 const& view_matrix() const
+        {
+            return view_matrix_;
+        }
+
+        [[nodiscard]] glm::fmat4 const& projection_matrix() const
         {
             return projection_matrix_;
         }
 
-        [[nodiscard]] glm::fmat4 view_projection_matrix() const
+        [[nodiscard]] glm::fmat4 const& view_projection_matrix() const
         {
             return view_projection_matrix_;
         }

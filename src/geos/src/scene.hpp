@@ -55,6 +55,8 @@ namespace geos
 
         void update(camera const& camera);
 
+        void debug();
+
     public:
         [[nodiscard]] VkClearValue clear_color();
 
@@ -95,6 +97,9 @@ namespace geos
         std::unique_ptr<vkrndr::vulkan_pipeline> pipeline_;
 
         cppext::cyclic_stack<frame_data> frame_data_;
+
+        glm::fvec3 light_position_{-25.0f, 20.0f, 0.0f};
+        glm::fvec3 light_color_{0.8f, 0.8f, 0.8f};
     };
 } // namespace geos
 

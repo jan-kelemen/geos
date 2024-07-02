@@ -172,7 +172,11 @@ void geos::application::draw(VkCommandBuffer command_buffer, VkExtent2D extent)
     }
 }
 
-void geos::application::draw_imgui() { camera_.debug(); }
+void geos::application::draw_imgui()
+{
+    camera_.debug();
+    scene_.debug();
+}
 
 void geos::application::load_meshes(vkrndr::vulkan_device* const device,
     vkrndr::vulkan_renderer* const renderer)
@@ -181,7 +185,8 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         renderer->load_model("geos.gltf")};
 
     std::vector<vkrndr::gltf_mesh const*> load_meshes;
-    std::vector<std::tuple<buffer_part, glm::fmat4, btScalar>> parts;
+    std::vector<std::tuple<buffer_part, glm::fmat4, btScalar, glm::fvec3>>
+        parts;
     std::vector<std::unique_ptr<btTriangleMesh>> collision_meshes;
 
     uint32_t vertex_count{};
@@ -197,7 +202,9 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
                 cppext::narrow<int32_t>(index_count),
                 vkrndr::count_cast(model_mesh->primitives[0].indices.size())},
             local_matrix(node),
-            node.name != "Sorter" ? 100.0f : 0.0f)};
+            node.name != "Sorter" ? 100.0f : 0.0f,
+            node.name != "Sorter" ? glm::fvec3{0.8f, 0.0f, 0.0f}
+                                  : glm::fvec3{0.8f, 0.8f, 0.8f})};
 
         vertex_count += std::get<0>(current_mesh).vertex_count;
         index_count += std::get<0>(current_mesh).index_count;
@@ -224,18 +231,23 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         {
             auto const& mesh{load_meshes[i]};
             auto const& part{std::get<0>(parts[i])};
+            auto const& mass{std::get<2>(parts[i])};
+            auto const& color{std::get<3>(parts[i])};
 
             auto const& gltf_vertices{mesh->primitives[0].vertices};
             auto const& gltf_indices{mesh->primitives[0].indices};
 
-            float color{-1.0f / part.vertex_count};
+            float color_offset{-1.0f / part.vertex_count};
             vertices = std::ranges::transform(gltf_vertices,
                 vertices,
                 [&](vkrndr::gltf_vertex const& vert)
                 {
-                    color += 1.0f / part.vertex_count;
+                    color_offset += 1.0f / cppext::as_fp(part.vertex_count);
                     return vertex{.position = glm::fvec4(vert.position, 0.0f),
-                        .color = glm::fvec3{color, color, color}};
+                        .color = mass == 0.0f
+                            ? color
+                            : color * glm::fvec3{color_offset},
+                        .normal = vert.normal};
                 }).out;
 
             indices =
@@ -272,7 +284,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
     for (size_t i{}; i != load_meshes.size(); ++i)
     {
-        auto const& [part, transform, mass] = parts[i];
+        auto const& [part, transform, mass, color] = parts[i];
 
         auto const entity{registry_.create()};
 

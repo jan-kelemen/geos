@@ -1,3 +1,4 @@
+#include <imgui.h>
 #include <scene.hpp>
 
 #include <camera.hpp>
@@ -15,8 +16,10 @@
 
 #include <cppext_cyclic_stack.hpp>
 #include <cppext_numeric.hpp>
+#include <cppext_pragma_warning.hpp>
 
 #include <glm/fwd.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 
 #include <vulkan/vulkan_core.h>
@@ -31,11 +34,19 @@
 
 namespace
 {
-    struct [[nodiscard]] transform final
+    DISABLE_WARNING_PUSH
+
+    DISABLE_WARNING_STRUCTURE_WAS_PADDED_DUE_TO_ALIGNMENT_SPECIFIER
+    struct alignas(64) [[nodiscard]] transform final
     {
         glm::fmat4 view;
         glm::fmat4 projection;
+        alignas(16) glm::fvec3 camera;
+        alignas(16) glm::fvec3 light_position;
+        alignas(16) glm::fvec3 light_color;
     };
+
+    DISABLE_WARNING_POP
 
     struct [[nodiscard]] storage final
     {
@@ -67,7 +78,12 @@ namespace
             VkVertexInputAttributeDescription{.location = 1,
                 .binding = 0,
                 .format = VK_FORMAT_R32G32B32_SFLOAT,
-                .offset = offsetof(geos::vertex, color)}};
+                .offset = offsetof(geos::vertex, color)},
+            VkVertexInputAttributeDescription{.location = 2,
+                .binding = 0,
+                .format = VK_FORMAT_R32G32B32_SFLOAT,
+                .offset = offsetof(geos::vertex, normal)},
+        };
 
         return descriptions;
     }
@@ -80,7 +96,8 @@ namespace
         vertex_uniform_binding.descriptorType =
             VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         vertex_uniform_binding.descriptorCount = 1;
-        vertex_uniform_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        vertex_uniform_binding.stageFlags =
+            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 
         VkDescriptorSetLayoutBinding vertex_storage_binding{};
         vertex_storage_binding.binding = 1;
@@ -260,10 +277,24 @@ void geos::scene::update(camera const& camera)
             frame_data_.top().uniform_buffer_region_)};
 
         *uniform_map.as<transform>() = {.view = camera.view_matrix(),
-            .projection = camera.projection_matrix()};
+            .projection = camera.projection_matrix(),
+            .camera = camera.position(),
+            .light_position = light_position_,
+            .light_color = light_color_};
 
         unmap_memory(vulkan_device_, &uniform_map);
     }
+}
+
+void geos::scene::debug()
+{
+    ImGui::Begin("Light");
+    ImGui::SliderFloat3("Position",
+        glm::value_ptr(light_position_),
+        -25.0f,
+        50.0f);
+    ImGui::SliderFloat3("Color", glm::value_ptr(light_color_), 0.0f, 1.0f);
+    ImGui::End();
 }
 
 VkClearValue geos::scene::clear_color() { return {{{1.f, .5f, .3f, 1.f}}}; }
