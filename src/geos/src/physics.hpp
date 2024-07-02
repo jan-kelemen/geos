@@ -35,6 +35,8 @@ namespace geos
             float mass,
             btVector3 const& origin);
 
+        void remove_rigid_body(btRigidBody* body);
+
         void add_constraint(btTypedConstraint* constraint);
 
         void remove_constraint(btTypedConstraint* constraint);

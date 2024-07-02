@@ -2,14 +2,17 @@
 #define GEOS_MOUSE_INCLUDED
 
 #include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
+#include <LinearMath/btScalar.h>
 
 #include <glm/fwd.hpp>
-#include <glm/vec3.hpp>
+#include <glm/vec3.hpp> // IWYU pragma: keep
 
 #include <SDL2/SDL_events.h>
 
 #include <memory>
 #include <utility>
+
+class btCollisionObject;
 
 namespace geos
 {
@@ -46,7 +49,7 @@ namespace geos
         mouse& operator=(mouse&&) noexcept = delete;
 
     private:
-        std::pair<glm::fvec3, glm::fvec3> cast_to_world() const;
+        [[nodiscard]] std::pair<glm::fvec3, glm::fvec3> cast_to_world() const;
 
     private:
         camera* camera_;
@@ -55,7 +58,7 @@ namespace geos
         bool capture_{false};
 
         btCollisionObject const* picked_body_{nullptr};
-        std::unique_ptr<btPoint2PointConstraint> pick_constraint_{};
+        std::unique_ptr<btPoint2PointConstraint> pick_constraint_;
         btScalar pick_distance_{};
     };
 } // namespace geos

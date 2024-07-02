@@ -55,6 +55,7 @@ geos::physics_simulation::~physics_simulation()
         collision_shapes_[j] = 0;
         delete shape;
     }
+    collision_shapes_.clear();
 }
 
 btRigidBody* geos::physics_simulation::add_rigid_body(
@@ -87,6 +88,11 @@ btRigidBody* geos::physics_simulation::add_rigid_body(
     world_->addRigidBody(body);
 
     return body;
+}
+
+void geos::physics_simulation::remove_rigid_body(btRigidBody* body)
+{
+    world_->removeRigidBody(body);
 }
 
 void geos::physics_simulation::add_constraint(

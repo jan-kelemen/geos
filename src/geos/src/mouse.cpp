@@ -5,6 +5,19 @@
 
 #include <cppext_numeric.hpp>
 
+#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btTransform.h>
+#include <LinearMath/btVector3.h>
+
+#include <glm/geometric.hpp>
+#include <glm/vec3.hpp>
+
+#include <SDL_events.h>
+#include <SDL_mouse.h>
+#include <SDL_stdinc.h>
+
+#include <cstdint>
 #include <memory>
 
 geos::mouse::mouse(camera* camera, physics_simulation* physics_simulation)
@@ -42,9 +55,11 @@ bool geos::mouse::handle_event(SDL_Event const& event)
             return false;
         }
 
-        if (auto rigid_body{
+        // NOLINTBEGIN(cppcoreguidelines-pro-type-const-cast)
+        if (auto* const rigid_body{
                 btRigidBody::upcast(const_cast<btCollisionObject*>(body))})
         {
+            // NOLINTEND(cppcoreguidelines-pro-type-const-cast)
             if (rigid_body->isStaticObject() || rigid_body->isKinematicObject())
             {
                 return false;
@@ -60,7 +75,7 @@ bool geos::mouse::handle_event(SDL_Event const& event)
                     local_pivot);
             physics_simulation_->add_constraint(pick_constraint_.get());
             pick_constraint_->m_setting.m_impulseClamp = 100.0f;
-            pick_constraint_->m_setting.m_tau = 0.001f;
+            //            pick_constraint_->m_setting.m_tau = 0.001f;
             pick_distance_ =
                 (point - btVector3{near.x, near.y, near.z}).length();
 

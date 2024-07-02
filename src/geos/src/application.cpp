@@ -2,6 +2,7 @@
 
 #include <camera.hpp>
 #include <mesh.hpp>
+#include <mouse.hpp>
 #include <physics.hpp>
 #include <scene.hpp>
 
@@ -13,26 +14,23 @@
 #include <vulkan_renderer.hpp>
 #include <vulkan_utility.hpp>
 
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 #include <BulletCollision/CollisionShapes/btCollisionShape.h>
 #include <BulletCollision/CollisionShapes/btTriangleMesh.h>
 #include <BulletCollision/Gimpact/btGImpactShape.h>
-#include <BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <LinearMath/btScalar.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
 
-#include <fmt/core.h>
-
 #include <glm/fwd.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp> // IWYU pragma: keep
 
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_mouse.h>
 #include <SDL2/SDL_scancode.h>
-#include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_video.h>
 
 #include <algorithm>
@@ -40,7 +38,9 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
-#include <ranges>
+#include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // IWYU pragma: no_include <filesystem>
@@ -131,6 +131,12 @@ void geos::application::detach_renderer(vkrndr::vulkan_device* const device,
 {
     scene_.detach_renderer(device, renderer);
 
+    for (auto entity : registry_.view<physics_component>())
+    {
+        auto physics{registry_.get<physics_component>(entity)};
+        physics_simulation_.remove_rigid_body(physics.rigid_body_);
+    }
+
     registry_.clear<mesh_component>();
     destroy(device, &model_mesh_);
 }
@@ -178,17 +184,17 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
     std::vector<std::tuple<buffer_part, glm::fmat4, btScalar>> parts;
     std::vector<std::unique_ptr<btTriangleMesh>> collision_meshes;
 
-    int32_t vertex_count{};
-    int32_t index_count{};
+    uint32_t vertex_count{};
+    uint32_t index_count{};
     for (auto const& node : model->nodes)
     {
         auto const& model_mesh{node.mesh};
         load_meshes.push_back(&(*model_mesh));
 
         auto const& current_mesh{parts.emplace_back(
-            buffer_part{vertex_count,
+            buffer_part{cppext::narrow<int32_t>(vertex_count),
                 vkrndr::count_cast(model_mesh->primitives[0].vertices.size()),
-                index_count,
+                cppext::narrow<int32_t>(index_count),
                 vkrndr::count_cast(model_mesh->primitives[0].indices.size())},
             local_matrix(node),
             node.name != "Sorter" ? 100.0f : 0.0f)};
@@ -244,12 +250,12 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
             collision_meshes.push_back(
                 std::make_unique<btTriangleMesh>(true, false));
 
-            for (uint32_t i{}; i != part.index_count; i += 3)
+            for (uint32_t j{}; j != part.index_count; j += 3)
             {
                 collision_meshes.back()->addTriangle(
-                    gltf_to_bt(gltf_vertices[gltf_indices[i]]),
-                    gltf_to_bt(gltf_vertices[gltf_indices[i + 1]]),
-                    gltf_to_bt(gltf_vertices[gltf_indices[i + 2]]));
+                    gltf_to_bt(gltf_vertices[gltf_indices[j]]),
+                    gltf_to_bt(gltf_vertices[gltf_indices[j + 1]]),
+                    gltf_to_bt(gltf_vertices[gltf_indices[j + 2]]));
             }
         }
 

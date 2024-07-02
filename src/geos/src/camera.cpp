@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init)
 geos::camera::camera(glm::fvec3 const& eye,
     uint32_t const width,
     uint32_t const height,

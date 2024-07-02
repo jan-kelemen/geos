@@ -59,7 +59,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         512,
         512};
 
-    geos::application application{512, 512, !enable_validation_layers};
+    geos::application application{512, 512, false};
 
     auto context{vkrndr::create_context(&window, enable_validation_layers)};
     auto device{vkrndr::create_device(context)};
