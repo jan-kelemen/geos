@@ -24,6 +24,7 @@ class GeosConan(ConanFile):
         self.requires("tinygltf/2.8.19")
         self.requires("vulkan-headers/1.3.268.0")
         self.requires("vulkan-loader/1.3.268.0")
+        self.requires("vulkan-memory-allocator/3.1.0")
 
     def build_requirements(self):
         self.tool_requires("cmake/[^3.27]")

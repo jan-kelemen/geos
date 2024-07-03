@@ -25,6 +25,7 @@ find_package(stb REQUIRED)
 find_package(TinyGLTF REQUIRED)
 find_package(VulkanHeaders REQUIRED)
 find_package(VulkanLoader REQUIRED)
+find_package(vulkan-memory-allocator REQUIRED)
 
 if (CMAKE_POSITION_INDEPENDENT_CODE)
     include(CheckPIESupported)

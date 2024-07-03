@@ -63,12 +63,14 @@ target_link_libraries(vkrndr
 		Freetype::Freetype
         imgui::imgui
         vulkan-headers::vulkan-headers
+        vulkan-memory-allocator::vulkan-memory-allocator
         SDL2::SDL2
         TinyGLTF::TinyGLTF
     PRIVATE
         stb_impl
         imgui_impl
         tinygltf_impl
+        vma_impl
     PRIVATE
         fmt::fmt
         glm::glm

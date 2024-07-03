@@ -21,6 +21,7 @@ Note: Override packages from Conan Center with updated ones from [jan-kelemen/co
 git clone git@github.com:jan-kelemen/conan-recipes.git
 conan create conan-recipes/recipes/sdl/all --version 2.30.3
 conan create conan-recipes/recipes/freetype/meson --version 2.13.2
+conan create conan-recipes/recipes/vulkan-memory-allocator/all --version 3.1.0
 conan create conan-recipes/recipes/pulseaudio/meson --version 17.0 # Linux only
 ```
 

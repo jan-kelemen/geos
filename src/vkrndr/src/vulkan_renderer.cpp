@@ -22,6 +22,8 @@
 
 #include <stb_image.h>
 
+#include <vma_impl.hpp>
+
 #include <array>
 #include <cstring>
 #include <optional>
