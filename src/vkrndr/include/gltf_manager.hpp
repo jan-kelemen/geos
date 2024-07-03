@@ -22,6 +22,15 @@ namespace vkrndr
 
 namespace vkrndr
 {
+    struct [[nodiscard]] gltf_bounding_box final
+    {
+        glm::fvec3 min;
+        glm::fvec3 max;
+    };
+
+    gltf_bounding_box get_aabb(gltf_bounding_box const& box,
+        glm::fmat4 const& local_matrix);
+
     struct [[nodiscard]] gltf_vertex final
     {
         glm::fvec3 position;
@@ -45,12 +54,15 @@ namespace vkrndr
     {
         std::vector<gltf_vertex> vertices;
         std::vector<uint32_t> indices;
+        std::optional<gltf_bounding_box> bounding_box;
         gltf_material* material{};
     };
 
     struct [[nodiscard]] gltf_mesh final
     {
+        std::string name;
         std::vector<gltf_primitive> primitives;
+        std::optional<gltf_bounding_box> bounding_box;
     };
 
     struct [[nodiscard]] gltf_node final
@@ -61,6 +73,8 @@ namespace vkrndr
         glm::fvec3 scale{1.0f};
         glm::fquat rotation{};
         glm::fmat4 matrix{1.0f};
+        std::optional<gltf_bounding_box> bounding_box;
+        std::optional<gltf_bounding_box> axis_aligned_bounding_box;
     };
 
     struct [[nodiscard]] gltf_model final

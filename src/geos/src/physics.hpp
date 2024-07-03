@@ -33,7 +33,7 @@ namespace geos
     public:
         btRigidBody* add_rigid_body(std::unique_ptr<btCollisionShape> shape,
             float mass,
-            btVector3 const& origin);
+            btTransform const& transform);
 
         void remove_rigid_body(btRigidBody* body);
 

@@ -209,6 +209,22 @@ namespace
         return rv;
     }
 
+    std::optional<vkrndr::gltf_bounding_box> load_bounding_box(
+        tinygltf::Model const& model,
+        tinygltf::Primitive const& primitive)
+    {
+        if (auto const it{primitive.attributes.find("POSITION")};
+            it != primitive.attributes.end())
+        {
+            auto const& [accessor, buffer, view] = data_for(model, it->second);
+            auto const& min{accessor.minValues};
+            auto const& max{accessor.maxValues};
+            return vkrndr::gltf_bounding_box{glm::fvec3{min[0], min[1], min[2]},
+                glm::fvec3{max[0], max[1], max[2]}};
+        }
+        return std::nullopt;
+    }
+
     void load_transform(tinygltf::Node const& node, vkrndr::gltf_node& new_node)
     {
         if (node.translation.size() == 3)
@@ -318,25 +334,97 @@ std::unique_ptr<vkrndr::gltf_model> vkrndr::gltf_manager::load(
 
         if (node.mesh != -1)
         {
-            gltf_mesh new_mesh;
             tinygltf::Mesh const& mesh{model.meshes[size_cast(node.mesh)]};
+
+            gltf_mesh new_mesh;
+            new_mesh.name = mesh.name;
+
+            auto& mesh_bounding_box{new_mesh.bounding_box};
 
             for (tinygltf::Primitive const& primitive : mesh.primitives)
             {
                 gltf_primitive new_primitive{
                     .vertices = load_vertices(model, primitive),
                     .indices = load_indices(model, primitive),
+                    .bounding_box = load_bounding_box(model, primitive),
                     .material = primitive.material >= 0
                         ? &rv->materials[size_cast(primitive.material)]
-                        : nullptr};
+                        : &rv->materials.back()};
+
+                if (new_primitive.bounding_box)
+                {
+                    if (!mesh_bounding_box)
+                    {
+                        mesh_bounding_box = new_primitive.bounding_box;
+                    }
+                    else
+                    {
+                        mesh_bounding_box->min =
+                            glm::min(new_primitive.bounding_box->min,
+                                mesh_bounding_box->min);
+                        mesh_bounding_box->max =
+                            glm::max(new_primitive.bounding_box->max,
+                                mesh_bounding_box->max);
+                    }
+                }
 
                 new_mesh.primitives.push_back(std::move(new_primitive));
             }
             new_node.mesh = std::move(new_mesh);
+            if (new_node.mesh->bounding_box)
+            {
+                if (!new_node.bounding_box)
+                {
+                    new_node.bounding_box = new_node.mesh->bounding_box;
+                }
+                else
+                {
+                    new_node.bounding_box->min =
+                        glm::min(new_node.bounding_box->min,
+                            new_node.mesh->bounding_box->min);
+                    new_node.bounding_box->max =
+                        glm::max(new_node.bounding_box->max,
+                            new_node.mesh->bounding_box->max);
+                }
+            }
         }
+
+        if (new_node.mesh && new_node.mesh->bounding_box)
+        {
+            new_node.axis_aligned_bounding_box =
+                get_aabb(*new_node.mesh->bounding_box, local_matrix(new_node));
+        }
+
         rv->nodes.push_back(std::move(new_node));
     }
     return rv;
+}
+
+vkrndr::gltf_bounding_box vkrndr::get_aabb(gltf_bounding_box const& box,
+    glm::fmat4 const& local_matrix)
+{
+    glm::fvec3 min{glm::vec3{local_matrix[3]}};
+    glm::fvec3 max{min};
+
+    glm::fvec3 const right{glm::vec3{local_matrix[0]}};
+    glm::fvec3 v0{right * box.min.x};
+    glm::fvec3 v1{right * box.max.x};
+    min += glm::min(v0, v1);
+    max += glm::max(v0, v1);
+
+    glm::vec3 const up{glm::vec3{local_matrix[1]}};
+    v0 = up * box.min.y;
+    v1 = up * box.max.y;
+    min += glm::min(v0, v1);
+    max += glm::max(v0, v1);
+
+    glm::vec3 const back{glm::vec3{local_matrix[2]}};
+    v0 = back * box.min.z;
+    v1 = back * box.max.z;
+    min += glm::min(v0, v1);
+    max += glm::max(v0, v1);
+
+    return {min, max};
 }
 
 glm::fmat4 vkrndr::local_matrix(gltf_node const& node)
