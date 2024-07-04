@@ -6,7 +6,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include <cstddef>
-#include <cstdint>
 
 namespace vkrndr
 {

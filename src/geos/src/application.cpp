@@ -27,7 +27,7 @@
 
 #include <glm/fwd.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/mat4x4.hpp>
+#include <glm/mat4x4.hpp> // IWYU pragma: keep
 #include <glm/vec3.hpp> // IWYU pragma: keep
 
 #include <SDL2/SDL_events.h>
@@ -143,11 +143,10 @@ geos::application::application(uint32_t const width,
     transform.setIdentity();
     transform.setOrigin({0.0f, -1.0f, 0.0f});
 
-    auto* const terrain_box{physics_simulation_.add_rigid_body(
+    physics_simulation_.add_rigid_body(
         std::make_unique<btBoxShape>(btVector3{50.0f, 1.0f, 50.0f}),
         0.0f,
-        transform)};
-    terrain_box->setUserIndex(1);
+        transform);
 }
 
 geos::application::~application() = default;
@@ -319,7 +318,7 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
 
             auto const& gltf_vertices{mesh->primitives[0].vertices};
 
-            float color_offset{-1.0f / part.vertex_count};
+            float color_offset{-1.0f / cppext::as_fp(part.vertex_count)};
             vertices = std::ranges::transform(gltf_vertices,
                 vertices,
                 [&](vkrndr::gltf_vertex const& vert)
@@ -372,7 +371,8 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         auto const& physics{registry_.emplace<physics_component>(entity,
             physics_simulation_.add_rigid_body(std::move(collision_shapes[i]),
                 mass,
-                physics_transform))};
+                physics_transform),
+            physics_transform)};
 
         physics.rigid_body_->setUserIndex(part.vertex_offset);
     }

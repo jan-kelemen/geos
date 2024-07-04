@@ -8,7 +8,7 @@
 #define NOMINMAX
 #endif
 
-#include <vk_mem_alloc.h>
+#include <vk_mem_alloc.h> // IWYU pragma: export
 
 #if defined(_MSC_VER)
 #pragma pop_macro("WIN32_LEAN_AND_MEAN")

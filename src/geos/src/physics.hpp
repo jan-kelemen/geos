@@ -63,7 +63,8 @@ namespace geos
 
     struct [[nodiscard]] physics_component final
     {
-        btRigidBody* rigid_body_;
+        btRigidBody* rigid_body_{nullptr};
+        btTransform initial_transform_;
 
         [[nodiscard]] btTransform position() const;
     };

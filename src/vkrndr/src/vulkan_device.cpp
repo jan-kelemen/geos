@@ -7,6 +7,8 @@
 
 #include <cppext_pragma_warning.hpp>
 
+#include <vma_impl.hpp>
+
 #include <array>
 #include <cstdint>
 #include <optional>

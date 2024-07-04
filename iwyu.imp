@@ -44,6 +44,7 @@
   { include: [ "<catch2/catch_message.hpp>", public, "<catch2/catch_test_macros.hpp>", public ] },
 
   # glm aliases
+  { include: [ "<glm/detail/func_common.inl>", private, "<glm/common.hpp>", public] },
   { include: [ "<glm/detail/type_vec2.hpp>", private, "<glm/vec2.hpp>", public ] },
   { include: [ "<glm/detail/type_vec2.inl>", private, "<glm/vec2.hpp>", public ] },
   { include: [ "<glm/ext/vector_int2.hpp>", private, "<glm/vec2.hpp>", public ] },

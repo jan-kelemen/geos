@@ -12,6 +12,7 @@
 #include <fmt/core.h>
 #include <fmt/std.h> // IWYU pragma: keep
 
+#include <glm/common.hpp>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>

@@ -3,6 +3,8 @@
 #include <vulkan_device.hpp>
 #include <vulkan_utility.hpp>
 
+#include <vma_impl.hpp>
+
 vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* device,
     VmaAllocation const& allocation)
 {

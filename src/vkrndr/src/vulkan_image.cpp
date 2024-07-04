@@ -1,8 +1,9 @@
 #include <vulkan_image.hpp>
 
 #include <vulkan_device.hpp>
-#include <vulkan_memory.hpp>
 #include <vulkan_utility.hpp>
+
+#include <vma_impl.hpp>
 
 void vkrndr::destroy(vulkan_device const* device, vulkan_image* const image)
 {
@@ -40,7 +41,7 @@ vkrndr::vulkan_image vkrndr::create_image(vulkan_device const* const device,
     image_info.flags = 0;
 
     VmaAllocationCreateInfo vma_info{};
-    vma_info.usage = usage & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+    vma_info.usage = (usage & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
         ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
         : VMA_MEMORY_USAGE_AUTO;
     if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ||
