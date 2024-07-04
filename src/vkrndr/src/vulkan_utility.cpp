@@ -6,7 +6,7 @@
 
 #include <exception>
 
-// IWYU pragma: no_include <fmt/core.h>
+// IWYU pragma: no_include <fmt/base.h>
 // IWYU pragma: no_include <spdlog/common.h>
 
 VkResult vkrndr::check_result(VkResult const result,

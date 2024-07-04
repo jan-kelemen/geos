@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-// IWYU pragma: no_include <fmt/core.h>
+// IWYU pragma: no_include <fmt/base.h>
 // IWYU pragma: no_include <spdlog/common.h>
 // IWYU pragma: no_include <functional>
 // IWYU pragma: no_include <string>

@@ -9,7 +9,7 @@
 
 #include <tinygltf_impl.hpp>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/std.h> // IWYU pragma: keep
 
 #include <glm/common.hpp>

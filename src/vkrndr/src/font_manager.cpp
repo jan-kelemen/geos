@@ -2,7 +2,7 @@
 
 #include <vulkan_font.hpp>
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 #include <fmt/std.h> // IWYU pragma: keep
 
 #include <glm/vec2.hpp>
