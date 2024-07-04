@@ -3,6 +3,8 @@
 
 #include <vulkan_queue.hpp>
 
+#include <vma_impl.hpp>
+
 #include <vulkan/vulkan_core.h>
 
 #include <vector>
@@ -22,6 +24,7 @@ namespace vkrndr
         std::vector<vulkan_queue> queues;
         vulkan_queue* transfer_queue{nullptr};
         vulkan_queue* present_queue{nullptr};
+        VmaAllocator allocator{VK_NULL_HANDLE};
     };
 
     vulkan_device create_device(vulkan_context const& context);

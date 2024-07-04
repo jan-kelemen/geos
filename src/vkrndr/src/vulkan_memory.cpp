@@ -3,50 +3,15 @@
 #include <vulkan_device.hpp>
 #include <vulkan_utility.hpp>
 
-#include <stdexcept>
-
-uint32_t vkrndr::find_memory_type(VkPhysicalDevice const physical_device,
-    uint32_t const type_filter,
-    VkMemoryPropertyFlags const properties)
-{
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(physical_device, &memory_properties);
-    for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i)
-    {
-        bool const is_type_set{(type_filter & (1 << i)) != 0};
-        if (is_type_set &&
-            (memory_properties.memoryTypes[i].propertyFlags & properties) ==
-                properties)
-        {
-            return i;
-        }
-    }
-
-    throw std::runtime_error{"failed to find suitable memory type!"};
-}
-
-vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* const device,
-    VkDeviceMemory const memory,
-    memory_region const& region)
+vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* device,
+    VmaAllocation const& allocation)
 {
     void* mapped; // NOLINT
-    check_result(vkMapMemory(device->logical,
-        memory,
-        region.offset,
-        region.size,
-        0,
-        &mapped));
-    return {memory, mapped};
-}
-
-vkrndr::mapped_memory vkrndr::map_memory(vulkan_device* const device,
-    VkDeviceMemory const memory,
-    VkDeviceSize const size)
-{
-    return map_memory(device, memory, memory_region{.offset = 0, .size = size});
+    check_result(vmaMapMemory(device->allocator, allocation, &mapped));
+    return {allocation, mapped};
 }
 
 void vkrndr::unmap_memory(vulkan_device* device, mapped_memory* memory)
 {
-    vkUnmapMemory(device->logical, memory->device_memory);
+    vmaUnmapMemory(device->allocator, memory->allocation);
 }

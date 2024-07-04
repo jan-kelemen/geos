@@ -180,6 +180,14 @@ vkrndr::vulkan_device vkrndr::create_device(vulkan_context const& context)
     check_result(
         vkCreateDevice(*device_it, &create_info, nullptr, &rv.logical));
 
+    VmaAllocatorCreateInfo allocator_info{};
+    allocator_info.instance = context.instance;
+    allocator_info.physicalDevice = rv.physical;
+    allocator_info.device = rv.logical;
+    allocator_info.vulkanApiVersion = VK_API_VERSION_1_3;
+
+    check_result(vmaCreateAllocator(&allocator_info, &rv.allocator));
+
     rv.queues.reserve(unique_families.size());
     for (uint32_t const family : unique_families)
     {
@@ -207,6 +215,7 @@ void vkrndr::destroy(vulkan_device* const device)
         {
             destroy(device, &queue);
         }
+        vmaDestroyAllocator(device->allocator);
         vkDestroyDevice(device->logical, nullptr);
     }
 }

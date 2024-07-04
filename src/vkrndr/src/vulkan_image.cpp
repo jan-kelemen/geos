@@ -9,8 +9,7 @@ void vkrndr::destroy(vulkan_device const* device, vulkan_image* const image)
     if (image)
     {
         vkDestroyImageView(device->logical, image->view, nullptr);
-        vkDestroyImage(device->logical, image->image, nullptr);
-        vkFreeMemory(device->logical, image->memory, nullptr);
+        vmaDestroyImage(device->allocator, image->image, image->allocation);
     }
 }
 
@@ -40,24 +39,22 @@ vkrndr::vulkan_image vkrndr::create_image(vulkan_device const* const device,
     image_info.samples = samples;
     image_info.flags = 0;
 
-    check_result(
-        vkCreateImage(device->logical, &image_info, nullptr, &rv.image));
+    VmaAllocationCreateInfo vma_info{};
+    vma_info.usage = usage & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
+        : VMA_MEMORY_USAGE_AUTO;
+    if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ||
+        properties & VK_MEMORY_PROPERTY_HOST_CACHED_BIT)
+    {
+        vma_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+    }
 
-    VkMemoryRequirements memory_requirements; // NOLINT
-    vkGetImageMemoryRequirements(device->logical,
-        rv.image,
-        &memory_requirements);
-
-    VkMemoryAllocateInfo alloc_info{};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = memory_requirements.size;
-    alloc_info.memoryTypeIndex = find_memory_type(device->physical,
-        memory_requirements.memoryTypeBits,
-        properties);
-
-    check_result(
-        vkAllocateMemory(device->logical, &alloc_info, nullptr, &rv.memory));
-    check_result(vkBindImageMemory(device->logical, rv.image, rv.memory, 0));
+    check_result(vmaCreateImage(device->allocator,
+        &image_info,
+        &vma_info,
+        &rv.image,
+        &rv.allocation,
+        nullptr));
 
     return rv;
 }

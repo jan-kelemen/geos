@@ -1,6 +1,8 @@
 #ifndef VKRNDR_VULKAN_IMAGE_INCLUDED
 #define VKRNDR_VULKAN_IMAGE_INCLUDED
 
+#include <vma_impl.hpp>
+
 #include <vulkan/vulkan_core.h>
 
 #include <cstdint>
@@ -15,7 +17,7 @@ namespace vkrndr
     struct [[nodiscard]] vulkan_image final
     {
         VkImage image{VK_NULL_HANDLE};
-        VkDeviceMemory memory{VK_NULL_HANDLE};
+        VmaAllocation allocation{VK_NULL_HANDLE};
         VkImageView view{VK_NULL_HANDLE};
         VkFormat format{};
     };

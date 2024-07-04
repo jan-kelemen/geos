@@ -273,10 +273,11 @@ void geos::scene::update(camera const& camera)
 {
     {
         vkrndr::mapped_memory uniform_map{vkrndr::map_memory(vulkan_device_,
-            vertex_uniform_buffer_.memory,
-            frame_data_.top().uniform_buffer_region_)};
+            vertex_uniform_buffer_.allocation)};
 
-        *uniform_map.as<transform>() = {.view = camera.view_matrix(),
+        *uniform_map.as<transform>(
+            frame_data_.top().uniform_buffer_region_.offset) = {
+            .view = camera.view_matrix(),
             .projection = camera.projection_matrix(),
             .camera = camera.position(),
             .light_position = light_position_,
@@ -315,14 +316,18 @@ void geos::scene::draw(gpu_mesh const& mesh,
     VkExtent2D const extent)
 {
     auto& frame_data{frame_data_.top()};
+    if (frame_data.storage_buffer_index_ >= 20)
+    {
+        return;
+    }
 
     {
         vkrndr::mapped_memory storage_map{vkrndr::map_memory(vulkan_device_,
-            vertex_storage_buffer_.memory,
-            frame_data.storage_buffer_region_)};
+            vertex_storage_buffer_.allocation)};
 
-        storage_map.as<storage>()[frame_data.storage_buffer_index_] = {
-            .model = model};
+        storage_map.as<storage>(
+            frame_data.storage_buffer_region_
+                .offset)[frame_data.storage_buffer_index_] = {.model = model};
 
         unmap_memory(vulkan_device_, &storage_map);
     }

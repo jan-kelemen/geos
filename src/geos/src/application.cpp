@@ -47,8 +47,6 @@
 
 // IWYU pragma: no_include <filesystem>
 
-#include <fmt/format.h>
-
 namespace
 {
     [[nodiscard]] std::unique_ptr<btCollisionShape> make_collision_shape(
@@ -63,7 +61,6 @@ namespace
 
         if (node_name == "Sorter" || node_name == "Arch")
         {
-            fmt::println(fmt::runtime(node_name));
             auto mesh{std::make_unique<btTriangleMesh>(true, false)};
 
             auto const& gltf_vertices{primitive.vertices};
@@ -307,10 +304,8 @@ void geos::application::load_meshes(vkrndr::vulkan_device* const device,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
     {
-        vkrndr::mapped_memory vert_index_map{vkrndr::map_memory(device,
-            staging_buffer.memory,
-            vkrndr::memory_region{.offset = 0,
-                .size = vertices_size + indices_size})};
+        vkrndr::mapped_memory vert_index_map{
+            vkrndr::map_memory(device, staging_buffer.allocation)};
 
         vertex* vertices{vert_index_map.as<vertex>(0)};
         uint32_t* indices{vert_index_map.as<uint32_t>(vertices_size)};

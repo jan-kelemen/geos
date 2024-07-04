@@ -1,6 +1,8 @@
 #ifndef VKRNDR_VULKAN_MEMORY_INCLUDED
 #define VKRNDR_VULKAN_MEMORY_INCLUDED
 
+#include <vma_impl.hpp>
+
 #include <vulkan/vulkan_core.h>
 
 #include <cstddef>
@@ -13,10 +15,6 @@ namespace vkrndr
 
 namespace vkrndr
 {
-    [[nodiscard]] uint32_t find_memory_type(VkPhysicalDevice physical_device,
-        uint32_t type_filter,
-        VkMemoryPropertyFlags properties);
-
     struct [[nodiscard]] memory_region final
     {
         VkDeviceSize offset{};
@@ -25,7 +23,7 @@ namespace vkrndr
 
     struct [[nodiscard]] mapped_memory final
     {
-        VkDeviceMemory device_memory;
+        VmaAllocation allocation;
         void* mapped_memory;
 
         template<typename T>
@@ -49,11 +47,7 @@ namespace vkrndr
     };
 
     mapped_memory map_memory(vulkan_device* device,
-        VkDeviceMemory memory,
-        memory_region const& region);
-
-    mapped_memory
-    map_memory(vulkan_device* device, VkDeviceMemory memory, VkDeviceSize size);
+        VmaAllocation const& allocation);
 
     void unmap_memory(vulkan_device* device, mapped_memory* memory);
 } // namespace vkrndr

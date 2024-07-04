@@ -22,8 +22,6 @@
 
 #include <stb_image.h>
 
-#include <vma_impl.hpp>
-
 #include <array>
 #include <cstring>
 #include <optional>
@@ -47,12 +45,17 @@ namespace
         uniform_buffer_pool_size.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         uniform_buffer_pool_size.descriptorCount = 3 * count;
 
+        VkDescriptorPoolSize storage_buffer_pool_size{};
+        storage_buffer_pool_size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        storage_buffer_pool_size.descriptorCount = 3 * count;
+
         VkDescriptorPoolSize texture_sampler_pool_size{};
         texture_sampler_pool_size.type =
             VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         texture_sampler_pool_size.descriptorCount = 2 * count;
 
         std::array pool_sizes{uniform_buffer_pool_size,
+            storage_buffer_pool_size,
             texture_sampler_pool_size};
 
         VkDescriptorPoolCreateInfo pool_info{};
@@ -312,8 +315,7 @@ vkrndr::vulkan_image vkrndr::vulkan_renderer::transfer_image(
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
 
-    mapped_memory staging_map{
-        map_memory(device_, staging_buffer.memory, image_data.size())};
+    mapped_memory staging_map{map_memory(device_, staging_buffer.allocation)};
     memcpy(staging_map.mapped_memory, image_data.data(), image_data.size());
     unmap_memory(device_, &staging_map);
 
@@ -391,8 +393,7 @@ vkrndr::vulkan_font vkrndr::vulkan_renderer::load_font(
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)};
 
-    mapped_memory staging_map{
-        map_memory(device_, staging_buffer.memory, image_size)};
+    mapped_memory staging_map{map_memory(device_, staging_buffer.allocation)};
     memcpy(staging_map.mapped_memory,
         font_bitmap.bitmap_data.data(),
         static_cast<size_t>(image_size));

@@ -64,7 +64,7 @@ btRigidBody* geos::physics_simulation::add_rigid_body(
     btTransform const& transform)
 {
     btVector3 local_inertia{0, 0, 0};
-    if (mass != 0.0f)
+    if (shape && mass != 0.0f)
     {
         shape->calculateLocalInertia(mass, local_inertia);
     }

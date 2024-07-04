@@ -1,5 +1,7 @@
 #include <vulkan_buffer.hpp>
 
+#include <vma_impl.hpp>
+
 #include <vulkan_device.hpp>
 #include <vulkan_memory.hpp>
 #include <vulkan_utility.hpp>
@@ -8,8 +10,7 @@ void vkrndr::destroy(vulkan_device const* device, vulkan_buffer* const buffer)
 {
     if (buffer)
     {
-        vkDestroyBuffer(device->logical, buffer->buffer, nullptr);
-        vkFreeMemory(device->logical, buffer->memory, nullptr);
+        vmaDestroyBuffer(device->allocator, buffer->buffer, buffer->allocation);
     }
 }
 
@@ -27,25 +28,22 @@ vkrndr::vulkan_buffer vkrndr::create_buffer(vulkan_device const* const device,
     buffer_info.usage = usage;
     buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    check_result(
-        vkCreateBuffer(device->logical, &buffer_info, nullptr, &rv.buffer));
+    VmaAllocationCreateInfo vma_info{};
+    vma_info.usage = usage & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
+        : VMA_MEMORY_USAGE_AUTO;
+    if (memory_properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ||
+        memory_properties & VK_MEMORY_PROPERTY_HOST_CACHED_BIT)
+    {
+        vma_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+    }
 
-    VkMemoryRequirements memory_requirements; // NOLINT
-    vkGetBufferMemoryRequirements(device->logical,
-        rv.buffer,
-        &memory_requirements);
-
-    VkMemoryAllocateInfo alloc_info{};
-    alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    alloc_info.allocationSize = memory_requirements.size;
-    alloc_info.memoryTypeIndex = vkrndr::find_memory_type(device->physical,
-        memory_requirements.memoryTypeBits,
-        memory_properties);
-
-    check_result(
-        vkAllocateMemory(device->logical, &alloc_info, nullptr, &rv.memory));
-
-    check_result(vkBindBufferMemory(device->logical, rv.buffer, rv.memory, 0));
+    check_result(vmaCreateBuffer(device->allocator,
+        &buffer_info,
+        &vma_info,
+        &rv.buffer,
+        &rv.allocation,
+        nullptr));
 
     return rv;
 }

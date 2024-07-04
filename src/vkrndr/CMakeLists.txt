@@ -59,6 +59,7 @@ target_include_directories(vkrndr
 target_link_libraries(vkrndr
     PUBLIC
         cppext
+        vma_impl
     PUBLIC
 		Freetype::Freetype
         imgui::imgui
@@ -70,7 +71,6 @@ target_link_libraries(vkrndr
         stb_impl
         imgui_impl
         tinygltf_impl
-        vma_impl
     PRIVATE
         fmt::fmt
         glm::glm
