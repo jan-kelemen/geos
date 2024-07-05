@@ -1,6 +1,6 @@
 # geos [![GitHub Build status](https://github.com/jan-kelemen/geos/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/jan-kelemen/geos/actions/workflows/ci.yml)
 
-Geometric shape sorter using Bullet3 for physics simulation and Vulkan API for rendering.
+Geometric shape sorter using Bullet3 for physics simulation and Vulkan API for rendering. Blog post: [It Goes In The Square Hole](https://jan-kelemen.github.io/2024/07/05/it-goes-in-the-square-hole.html)
 
 ## Building
 Necessary build tools are:
